@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="NetCore">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="main">
+      <UniqueIdentifier>{44a3adf4-aff3-40d7-b01f-ef7a2a661e89}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="IOCPServer.cpp">
+      <Filter>NetCore</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="IOCPServer.h">
+      <Filter>NetCore</Filter>
+    </ClInclude>
+    <ClInclude Include="IServer.h">
+      <Filter>NetCore</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientInfo.h">
+      <Filter>NetCore</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

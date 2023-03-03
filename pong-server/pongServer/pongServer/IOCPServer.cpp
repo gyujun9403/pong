@@ -183,23 +183,64 @@ void IocpServer::recv(ClientInfo& clientInfo)
 	);
 	if (rtRecv == SOCKET_ERROR)
 	{
-		//if (rtRecv != ERROR_IO_PENDING)
 		if (WSAGetLastError() != ERROR_IO_PENDING)
 		{
-			// 에러 상황
 			std::cerr << makeErrorStr("WSARecv()") << std::endl;
 		}
 	}
 }
 
-void IocpServer::send(ClientInfo& clientInfo, std::string msgStr)
+void IocpServer::pushToSendQueue(ClientInfo& clientInfo, std::string str)
+{
+	// 락을 클라별로 가지고 있는게 맞는거같은데?????
+	std::lock_guard<std::mutex> pushQueueLock(m_sendQueueMutex);
+	clientInfo.sendQueue.push(str);
+	if (clientInfo.sendQueue.size() == 1)
+	{
+
+	}
+}
+
+//void IocpServer::send(ClientInfo& clientInfo, std::string msgStr)
+//{
+//	DWORD dumyRecvByte = 0;
+//	DWORD dumyFlags = 0;
+//	size_t strLen = (msgStr.size() > SOCKBUFFERSIZE) ? (SOCKBUFFERSIZE) : (msgStr.size());
+//	CopyMemory(clientInfo.sendOverlapped.buf, msgStr.c_str(), strLen);
+//
+//	clientInfo.sendOverlapped.wsaBuf.buf = clientInfo.sendOverlapped.buf;
+//	clientInfo.sendOverlapped.wsaBuf.len = strLen;
+//	clientInfo.sendOverlapped.ioOperation = IOOperation::SEND;
+//
+//	int rt = WSASend
+//	(
+//		clientInfo.clientSocket,
+//		&clientInfo.sendOverlapped.wsaBuf,
+//		1,
+//		&clientInfo.sendOverlapped.wsaBuf.len,
+//		dumyFlags,
+//		reinterpret_cast<LPWSAOVERLAPPED>(&clientInfo.sendOverlapped),
+//		NULL
+//	);
+//	if (rt == SOCKET_ERROR)
+//	{
+//		//if (rt != ERROR_IO_PENDING)
+//		if (WSAGetLastError() != ERROR_IO_PENDING)
+//		{
+//			std::cerr << makeErrorStr("WSASend()") << std::endl;
+//		}
+//	}
+//}
+
+void IocpServer::send(ClientInfo& clientInfo)
 {
 	DWORD dumyRecvByte = 0;
 	DWORD dumyFlags = 0;
-	size_t strLen = (msgStr.size() > SOCKBUFFERSIZE) ? (SOCKBUFFERSIZE) : (msgStr.size());
-	CopyMemory(clientInfo.sendOverlapped.buf, msgStr.c_str(), strLen);
+	size_t strLen = (clientInfo.sendQueue.front().size() > SOCKBUFFERSIZE) 
+		? (SOCKBUFFERSIZE) : (clientInfo.sendQueue.front().size());
+	//CopyMemory(clientInfo.sendOverlapped.buf, msgStr.c_str(), strLen);
 
-	clientInfo.sendOverlapped.wsaBuf.buf = clientInfo.sendOverlapped.buf;
+	clientInfo.sendOverlapped.wsaBuf.buf = &clientInfo.sendQueue.front()[0];
 	clientInfo.sendOverlapped.wsaBuf.len = strLen;
 	clientInfo.sendOverlapped.ioOperation = IOOperation::SEND;
 
@@ -346,8 +387,34 @@ void IocpServer::workerThreadFunc()
 		}
 		else if (exOverlappedPtr->ioOperation == IOOperation::SEND)
 		{
-			//
-			recv(*clientInfoPtr);
+			/*  Lock을 건다
+			*	1. send시 전송한 길이를 확인한다
+					1. 0번째 원소의 크기와 같으면 그 원소를 잘 요청한것. queue에서 삭제한다.
+					2. 0번째 원소 크기보다 작으면 덜 보낸 것 이므로, 데이터 갱신만 한다.
+					3. 만약 원소가 없다면 로직이 이상한 것 임. 삭제를 worker에서만 해줘야함.
+				2. queue에 남은 원소가 있다면(다 보냈던, 덜 보냈던) send를 걸어버린다.
+			*/
+			std::lock_guard<std::mutex> sendGuard(m_sendQueueMutex);
+			if (clientInfoPtr->sendQueue.size() == 0)
+			{
+				throw "wtf?";
+			}
+			else if (transferredByte == clientInfoPtr->sendQueue.front().size())
+			{
+				// 한번에 다 보낸 경우
+				clientInfoPtr->sendQueue.pop();
+			}
+			else if (transferredByte < clientInfoPtr->sendQueue.front().size())
+			{
+				// 덜 보낸 경우
+				std::string tempStr = clientInfoPtr->sendQueue.front();
+				clientInfoPtr->sendQueue.front()
+					.assign(tempStr, transferredByte, tempStr.size() - transferredByte);
+			}
+			if (clientInfoPtr->sendQueue.size() > 0)
+			{
+				this->recv(*clientInfoPtr);
+			}
 		}
 		else
 		{

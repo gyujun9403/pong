@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <exception>
 #include <winsock2.h>
+#include <mutex>
 #include "IServer.h"
 #include "ClientInfo.h"
 
@@ -24,6 +25,7 @@ private:
 	const uint32_t m_clientNum;
 	std::atomic_bool m_isWorkersRun;
 	std::atomic_bool m_isAccpterRun;
+	std::mutex m_sendQueueMutex;
 
 public:
 	IocpServer() = delete;
@@ -51,5 +53,7 @@ private:
 	void closeSocket();
 
 	void recv(ClientInfo& clientInfo);
-	void send(ClientInfo& clientInfo, std::string str);
+	/*void send(ClientInfo& clientInfo, std::string str);*/
+	void send(ClientInfo& clientInfo);
+	void pushToSendQueue(ClientInfo& clientInfo, std::string str);
 };

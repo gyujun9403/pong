@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
+#include <queue>
 #include <winsock2.h>
 
 const UINT32 SOCKBUFFERSIZE = 256;
@@ -23,6 +25,8 @@ public:
 	SOCKET clientSocket = INVALID_SOCKET;
 	ExOverlapped recvOverlapped;
 	ExOverlapped sendOverlapped;
+	std::string recvBufString;
+	std::queue<std::string> sendQueue;
 
 	ClientInfo(const uint32_t idx)
 	{

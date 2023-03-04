@@ -197,7 +197,7 @@ void IocpServer::pushToSendQueue(ClientInfo& clientInfo, std::string str)
 	clientInfo.sendQueue.push(str);
 	if (clientInfo.sendQueue.size() == 1)
 	{
-
+		this->send(clientInfo);
 	}
 }
 
@@ -236,8 +236,10 @@ void IocpServer::send(ClientInfo& clientInfo)
 {
 	DWORD dumyRecvByte = 0;
 	DWORD dumyFlags = 0;
-	size_t strLen = (clientInfo.sendQueue.front().size() > SOCKBUFFERSIZE) 
-		? (SOCKBUFFERSIZE) : (clientInfo.sendQueue.front().size());
+	/*size_t strLen = (clientInfo.sendQueue.front().size() > SOCKBUFFERSIZE) 
+		? (SOCKBUFFERSIZE) : (clientInfo.sendQueue.front().size());*/
+	size_t strLen = (clientInfo.sendQueue.front().size() > 2)
+		? (2) : (clientInfo.sendQueue.front().size());
 	//CopyMemory(clientInfo.sendOverlapped.buf, msgStr.c_str(), strLen);
 
 	clientInfo.sendOverlapped.wsaBuf.buf = &clientInfo.sendQueue.front()[0];
@@ -383,6 +385,7 @@ void IocpServer::workerThreadFunc()
 			//
 			std::string recvStr(exOverlappedPtr->buf, transferredByte);
 			std::cout << clientInfoPtr->index  <<  " : " << recvStr;
+			pushToSendQueue(*clientInfoPtr, recvStr);
 			recv(*clientInfoPtr);
 		}
 		else if (exOverlappedPtr->ioOperation == IOOperation::SEND)
@@ -413,8 +416,9 @@ void IocpServer::workerThreadFunc()
 			}
 			if (clientInfoPtr->sendQueue.size() > 0)
 			{
-				this->recv(*clientInfoPtr);
+				this->send(*clientInfoPtr);
 			}
+			this->recv(*clientInfoPtr);
 		}
 		else
 		{

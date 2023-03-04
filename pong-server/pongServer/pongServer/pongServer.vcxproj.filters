@@ -8,6 +8,15 @@
     <Filter Include="main">
       <UniqueIdentifier>{44a3adf4-aff3-40d7-b01f-ef7a2a661e89}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Packet">
+      <UniqueIdentifier>{bb0b4d4a-6a92-4912-9dfb-7e7379af0625}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Service">
+      <UniqueIdentifier>{fb78e6fc-413b-496d-b072-aa56a9345120}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="User">
+      <UniqueIdentifier>{280de97a-11bb-435d-8acd-d6067337bc2c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IOCPServer.cpp">
@@ -26,6 +35,24 @@
     </ClInclude>
     <ClInclude Include="ClientInfo.h">
       <Filter>NetCore</Filter>
+    </ClInclude>
+    <ClInclude Include="Service.hpp">
+      <Filter>Service</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketsDefine.hpp">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="ErrorCode.hpp">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketManager.hpp">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="UserManager.hpp">
+      <Filter>User</Filter>
+    </ClInclude>
+    <ClInclude Include="User.hpp">
+      <Filter>User</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

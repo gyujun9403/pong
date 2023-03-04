@@ -132,8 +132,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientInfo.h" />
+    <ClInclude Include="ErrorCode.hpp" />
     <ClInclude Include="IOCPServer.h" />
     <ClInclude Include="IServer.h" />
+    <ClInclude Include="PacketManager.hpp" />
+    <ClInclude Include="PacketsDefine.hpp" />
+    <ClInclude Include="Service.hpp" />
+    <ClInclude Include="User.hpp" />
+    <ClInclude Include="UserManager.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

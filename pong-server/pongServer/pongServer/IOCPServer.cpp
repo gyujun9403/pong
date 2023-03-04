@@ -166,7 +166,8 @@ void IocpServer::recv(ClientInfo& clientInfo)
 {
 	DWORD dumyRecvByte = 0;
 	DWORD dumyFlags = 0;
-	clientInfo.recvOverlapped.wsaBuf.buf = clientInfo.recvOverlapped.buf;
+	//clientInfo.recvOverlapped.wsaBuf.buf = clientInfo.recvOverlapped.buf;
+	clientInfo.recvOverlapped.wsaBuf.buf = clientInfo.recvBuf;
 	clientInfo.recvOverlapped.wsaBuf.len = SOCKBUFFERSIZE;
 	clientInfo.recvOverlapped.ioOperation = IOOperation::RECV;
 
@@ -193,44 +194,14 @@ void IocpServer::recv(ClientInfo& clientInfo)
 void IocpServer::pushToSendQueue(ClientInfo& clientInfo, std::string str)
 {
 	// 락을 클라별로 가지고 있는게 맞는거같은데?????
-	std::lock_guard<std::mutex> pushQueueLock(m_sendQueueMutex);
+	//std::lock_guard<std::mutex> pushQueueLock(m_sendQueueMutex);
+	std::lock_guard<std::mutex> pushQueueLock(clientInfo.sendQueueMutex);
 	clientInfo.sendQueue.push(str);
 	if (clientInfo.sendQueue.size() == 1)
 	{
 		this->send(clientInfo);
 	}
 }
-
-//void IocpServer::send(ClientInfo& clientInfo, std::string msgStr)
-//{
-//	DWORD dumyRecvByte = 0;
-//	DWORD dumyFlags = 0;
-//	size_t strLen = (msgStr.size() > SOCKBUFFERSIZE) ? (SOCKBUFFERSIZE) : (msgStr.size());
-//	CopyMemory(clientInfo.sendOverlapped.buf, msgStr.c_str(), strLen);
-//
-//	clientInfo.sendOverlapped.wsaBuf.buf = clientInfo.sendOverlapped.buf;
-//	clientInfo.sendOverlapped.wsaBuf.len = strLen;
-//	clientInfo.sendOverlapped.ioOperation = IOOperation::SEND;
-//
-//	int rt = WSASend
-//	(
-//		clientInfo.clientSocket,
-//		&clientInfo.sendOverlapped.wsaBuf,
-//		1,
-//		&clientInfo.sendOverlapped.wsaBuf.len,
-//		dumyFlags,
-//		reinterpret_cast<LPWSAOVERLAPPED>(&clientInfo.sendOverlapped),
-//		NULL
-//	);
-//	if (rt == SOCKET_ERROR)
-//	{
-//		//if (rt != ERROR_IO_PENDING)
-//		if (WSAGetLastError() != ERROR_IO_PENDING)
-//		{
-//			std::cerr << makeErrorStr("WSASend()") << std::endl;
-//		}
-//	}
-//}
 
 void IocpServer::send(ClientInfo& clientInfo)
 {
@@ -240,7 +211,6 @@ void IocpServer::send(ClientInfo& clientInfo)
 		? (SOCKBUFFERSIZE) : (clientInfo.sendQueue.front().size());*/
 	size_t strLen = (clientInfo.sendQueue.front().size() > 2)
 		? (2) : (clientInfo.sendQueue.front().size());
-	//CopyMemory(clientInfo.sendOverlapped.buf, msgStr.c_str(), strLen);
 
 	clientInfo.sendOverlapped.wsaBuf.buf = &clientInfo.sendQueue.front()[0];
 	clientInfo.sendOverlapped.wsaBuf.len = strLen;
@@ -258,7 +228,6 @@ void IocpServer::send(ClientInfo& clientInfo)
 	);
 	if (rt == SOCKET_ERROR)
 	{
-		//if (rt != ERROR_IO_PENDING)
 		if (WSAGetLastError() != ERROR_IO_PENDING)
 		{
 			std::cerr << makeErrorStr("WSASend()") << std::endl;
@@ -275,7 +244,7 @@ void IocpServer::acceptThreadFunc()
 	while (m_isAccpterRun.load())
 	{
 		ClientInfo* emptyClientInfo = NULL;
-		for (ClientInfo& clientElement : m_clients) //!!!! 참조 쓰는게 맞나?
+		for (ClientInfo& clientElement : m_clients)
 		{
 			if (clientElement.clientSocket == INVALID_SOCKET)
 			{
@@ -291,7 +260,8 @@ void IocpServer::acceptThreadFunc()
 		}
 
 		emptyClientInfo->clientSocket = ::accept(m_listenSocket, &tempSockaddr, &sockaddrSize);
-		if (emptyClientInfo->clientSocket == INVALID_SOCKET)
+		if (emptyClientInfo->clientSocket == INVALID_SOCKET
+			|| emptyClientInfo->clientSocket == NULL)
 		{
 			std::cout << makeErrorStr("accept") << std::endl;
 			return;
@@ -382,8 +352,8 @@ void IocpServer::workerThreadFunc()
 		exOverlappedPtr = reinterpret_cast<ExOverlapped*>(overlappedResultPtr);
 		if (exOverlappedPtr->ioOperation == IOOperation::RECV)
 		{
-			//
-			std::string recvStr(exOverlappedPtr->buf, transferredByte);
+			//std::string recvStr(exOverlappedPtr->buf, transferredByte);
+			std::string recvStr(clientInfoPtr->recvBuf, transferredByte);
 			std::cout << clientInfoPtr->index  <<  " : " << recvStr;
 			pushToSendQueue(*clientInfoPtr, recvStr);
 			recv(*clientInfoPtr);
@@ -397,7 +367,8 @@ void IocpServer::workerThreadFunc()
 					3. 만약 원소가 없다면 로직이 이상한 것 임. 삭제를 worker에서만 해줘야함.
 				2. queue에 남은 원소가 있다면(다 보냈던, 덜 보냈던) send를 걸어버린다.
 			*/
-			std::lock_guard<std::mutex> sendGuard(m_sendQueueMutex);
+			//std::lock_guard<std::mutex> sendGuard(m_sendQueueMutex);
+			std::lock_guard<std::mutex> sendGuard(clientInfoPtr->sendQueueMutex);
 			if (clientInfoPtr->sendQueue.size() == 0)
 			{
 				throw "wtf?";

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <queue>
+#include <mutex>
 #include <winsock2.h>
 
 const UINT32 SOCKBUFFERSIZE = 256;
@@ -15,7 +16,7 @@ struct ExOverlapped
 	WSAOVERLAPPED wsaOverlapped;
 	WSABUF		wsaBuf;
 	IOOperation ioOperation;
-	char buf[SOCKBUFFERSIZE];
+	//char buf[SOCKBUFFERSIZE];
 };
 
 class ClientInfo
@@ -25,9 +26,12 @@ public:
 	SOCKET clientSocket = INVALID_SOCKET;
 	ExOverlapped recvOverlapped;
 	ExOverlapped sendOverlapped;
-	std::string recvBufString;
+	char recvBuf[SOCKBUFFERSIZE];
 	std::queue<std::string> sendQueue;
+	std::mutex sendQueueMutex;
 
+	ClientInfo() = delete;
+	ClientInfo(const ClientInfo& other) {}
 	ClientInfo(const uint32_t idx)
 	{
 		ZeroMemory(&recvOverlapped, sizeof(recvOverlapped));

@@ -25,7 +25,7 @@ private:
 	const uint32_t m_clientNum;
 	std::atomic_bool m_isWorkersRun;
 	std::atomic_bool m_isAccpterRun;
-	std::mutex m_sendQueueMutex;
+	std::mutex m_recvQueueMutex;
 
 public:
 	IocpServer() = delete;
@@ -56,4 +56,7 @@ private:
 	/*void send(ClientInfo& clientInfo, std::string str);*/
 	void send(ClientInfo& clientInfo);
 	void pushToSendQueue(ClientInfo& clientInfo, std::string str);
+	// 반환값 : 패킷 포인터
+	// 인자(out) : 
+	//void getFromRecvQeueu();
 };

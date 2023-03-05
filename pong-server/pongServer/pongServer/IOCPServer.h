@@ -11,6 +11,7 @@
 #include <mutex>
 #include "IServer.h"
 #include "ClientInfo.h"
+//#include "UserManager.hpp"
 
 class IocpServer : public IServer
 {
@@ -22,16 +23,23 @@ private:
 	std::thread m_accecpThread;
 	std::vector<std::thread> m_workers;
 	std::vector<ClientInfo> m_clients;
+	//UserManager
 	const uint32_t m_clientNum;
 	std::atomic_bool m_isWorkersRun;
 	std::atomic_bool m_isAccpterRun;
+	//UserManager* m_userManager;
 	std::mutex m_recvQueueMutex;
+	std::queue<std::pair<int, std::string> > m_recvResultQueue;
+	//std::mutex m_sendQueueMutex;
 
 public:
 	IocpServer() = delete;
 	// 서버 유저수, 워커스레드 개수
 	IocpServer(const uint32_t clientNum, const uint16_t workerThreadNum, const uint16_t port);
+	//IocpServer(UserManager* userManager, const uint16_t workerThreadNum, const uint16_t port);
 	~IocpServer() {}
+	void pushToSendQueue(uint16_t clientIndex, std::string str);
+	std::pair<int, std::string> getFromRecvQueue();
 	virtual bool initServer();
 	virtual bool upServer();
 	virtual void downServer();
@@ -55,7 +63,6 @@ private:
 	void recv(ClientInfo& clientInfo);
 	/*void send(ClientInfo& clientInfo, std::string str);*/
 	void send(ClientInfo& clientInfo);
-	void pushToSendQueue(ClientInfo& clientInfo, std::string str);
 	// 반환값 : 패킷 포인터
 	// 인자(out) : 
 	//void getFromRecvQeueu();

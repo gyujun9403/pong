@@ -1,11 +1,15 @@
 #include "IOCPServer.h"
+#include "Service.hpp"
+#include "UserManager.hpp"
 
 int main()
 {
-	IServer* server = new IocpServer(34, 4, 3334);
-
-	server->initServer();
-	server->upServer();
+	UserManager userManager(34);
+	IocpServer network(34, 4, 3334);
+	Service service(&network, &userManager);
+	network.initServer();
+	network.upServer();
+	service.runService();
 	std::cout << "아무 키나 누를 때까지 대기합니다" << std::endl;
 	//while (true)
 	//{
@@ -17,6 +21,6 @@ int main()
 			//break;
 		//}
 	//}
-	server->downServer();
+	network.downServer();
 	return 0;
 }

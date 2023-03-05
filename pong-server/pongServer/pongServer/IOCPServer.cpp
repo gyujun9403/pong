@@ -9,6 +9,15 @@ IocpServer::IocpServer(const uint32_t clientNum, const uint16_t workerThreadNum,
 	m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 }
 
+//IocpServer::IocpServer(UserManager* userManager, const uint16_t workerThreadNum, const uint16_t port)
+//	: m_listenSocket(INVALID_SOCKET), m_workerThreadNum(workerThreadNum)
+//	, m_isWorkersRun(true), m_isAccpterRun(true), m_userManager(userManager)
+//{
+//	m_serverAddr.sin_family = AF_INET;
+//	m_serverAddr.sin_port = htons(port); //서버 포트를 설정한다.		
+//	m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+//}
+
 bool IocpServer::initServer()
 {
 	try
@@ -98,9 +107,13 @@ void IocpServer::listen()
 
 void IocpServer::iocpInit()
 {
-	for (size_t i = 0; i < m_clientNum; i++)
+	for (uint16_t i = 0; i < m_clientNum; i++)
 	{
 		m_clients.emplace_back(i);
+	}
+	for (uint16_t i = 0; i < m_clientNum; i++)
+	{
+		m_clients[i].init();
 	}
 	m_iocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, m_workerThreadNum);
 	if (m_iocpHandle == NULL)
@@ -191,16 +204,28 @@ void IocpServer::recv(ClientInfo& clientInfo)
 	}
 }
 
-void IocpServer::pushToSendQueue(ClientInfo& clientInfo, std::string str)
+void IocpServer::pushToSendQueue(uint16_t clientIndex, std::string str)
 {
 	// 락을 클라별로 가지고 있는게 맞는거같은데?????
 	//std::lock_guard<std::mutex> pushQueueLock(m_sendQueueMutex);
-	std::lock_guard<std::mutex> pushQueueLock(clientInfo.sendQueueMutex);
-	clientInfo.sendQueue.push(str);
-	if (clientInfo.sendQueue.size() == 1)
+	std::lock_guard<std::mutex> pushQueueLock(m_clients[clientIndex].sendQueueMutex);
+	m_clients[clientIndex].sendQueue.push(str);
+	if (m_clients[clientIndex].sendQueue.size() == 1)
 	{
-		this->send(clientInfo);
+		this->send(m_clients[clientIndex]);
 	}
+}
+
+std::pair<int, std::string> IocpServer::getFromRecvQueue()
+{
+	std::pair<int, std::string> rt(-1, "");
+	std::lock_guard<std::mutex> pushQueueLock(m_recvQueueMutex);
+	if (!m_recvResultQueue.empty())
+	{
+		rt = m_recvResultQueue.front();
+		m_recvResultQueue.pop();
+	}
+	return rt;
 }
 
 void IocpServer::send(ClientInfo& clientInfo)
@@ -243,6 +268,7 @@ void IocpServer::acceptThreadFunc()
 	HANDLE rtHandle;
 	while (m_isAccpterRun.load())
 	{
+		//ClientInfo* emptyClientInfo = m_userManager->getEmtyUserForAccept();
 		ClientInfo* emptyClientInfo = NULL;
 		for (ClientInfo& clientElement : m_clients)
 		{
@@ -355,7 +381,12 @@ void IocpServer::workerThreadFunc()
 			//std::string recvStr(exOverlappedPtr->buf, transferredByte);
 			std::string recvStr(clientInfoPtr->recvBuf, transferredByte);
 			std::cout << clientInfoPtr->index  <<  " : " << recvStr;
-			pushToSendQueue(*clientInfoPtr, recvStr);
+			{
+				std::lock_guard<std::mutex> recvQueueGuard(m_recvQueueMutex);
+				m_recvResultQueue.push(std::make_pair(clientInfoPtr->index, recvStr));
+			}
+
+			//pushToSendQueue(clientInfoPtr->index, recvStr);
 			recv(*clientInfoPtr);
 		}
 		else if (exOverlappedPtr->ioOperation == IOOperation::SEND)

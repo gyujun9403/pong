@@ -32,7 +32,7 @@ enum class  PACKET_ID : uint16_t
 struct PacketHeader
 {
 	uint16_t PacketLength;
-	uint16_t PacketId;
+	PACKET_ID PacketId;
 	uint8_t Type; //압축여부 암호화여부 등 속성을 알아내는 값
 };
 

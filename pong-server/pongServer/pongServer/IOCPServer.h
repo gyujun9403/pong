@@ -22,20 +22,23 @@ private:
 	HANDLE m_iocpHandle;
 	std::thread m_accecpThread;
 	std::vector<std::thread> m_workers;
-	std::vector<ClientInfo> m_clients;
+	std::vector<ClientInfo, std::allocator<ClientInfo> > m_clients;
+	// 여기 담지 말고, 그냥 클라인포에서 가져다 쓰게 하면??? -> 근데 여러개가 쌓이면 뭐부터 하게 할지 
+	// 
 	//UserManager
 	const uint32_t m_clientNum;
 	std::atomic_bool m_isWorkersRun;
 	std::atomic_bool m_isAccpterRun;
 	//UserManager* m_userManager;
 	std::mutex m_recvQueueMutex;
-	std::queue<std::pair<int, std::string> > m_recvResultQueue;
+	//std::queue<std::pair<int, std::string> > m_recvResultQueue;
+	std::queue<std::pair<int, std::vector<char> > > m_recvResultQueue;
 	//std::mutex m_sendQueueMutex;
 
 public:
 	IocpServer() = delete;
 	// 서버 유저수, 워커스레드 개수
-	IocpServer(const uint32_t clientNum, const uint16_t workerThreadNum, const uint16_t port);
+	IocpServer(uint32_t clientNum, uint16_t workerThreadNum, uint16_t port);
 	//IocpServer(UserManager* userManager, const uint16_t workerThreadNum, const uint16_t port);
 	~IocpServer() {}
 	void pushToSendQueue(uint16_t clientIndex, std::string str);

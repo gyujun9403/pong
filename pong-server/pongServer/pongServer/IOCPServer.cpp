@@ -1,4 +1,5 @@
 #include "IOCPServer.h"
+#include "PacketsDefine.hpp"
 
 IocpServer::IocpServer(const uint32_t clientNum, const uint16_t workerThreadNum, const uint16_t port)
 : m_listenSocket(INVALID_SOCKET), m_workerThreadNum(workerThreadNum)
@@ -8,15 +9,6 @@ IocpServer::IocpServer(const uint32_t clientNum, const uint16_t workerThreadNum,
 	m_serverAddr.sin_port = htons(port); //서버 포트를 설정한다.		
 	m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 }
-
-//IocpServer::IocpServer(UserManager* userManager, const uint16_t workerThreadNum, const uint16_t port)
-//	: m_listenSocket(INVALID_SOCKET), m_workerThreadNum(workerThreadNum)
-//	, m_isWorkersRun(true), m_isAccpterRun(true), m_userManager(userManager)
-//{
-//	m_serverAddr.sin_family = AF_INET;
-//	m_serverAddr.sin_port = htons(port); //서버 포트를 설정한다.		
-//	m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-//}
 
 bool IocpServer::initServer()
 {
@@ -109,11 +101,8 @@ void IocpServer::iocpInit()
 {
 	for (uint16_t i = 0; i < m_clientNum; i++)
 	{
-		m_clients.emplace_back(i);
-	}
-	for (uint16_t i = 0; i < m_clientNum; i++)
-	{
-		m_clients[i].init();
+		m_clients.resize(m_clientNum);
+		m_clients[i].init(i);
 	}
 	m_iocpHandle = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, m_workerThreadNum);
 	if (m_iocpHandle == NULL)
@@ -206,8 +195,7 @@ void IocpServer::recv(ClientInfo& clientInfo)
 
 void IocpServer::pushToSendQueue(uint16_t clientIndex, std::string str)
 {
-	// 락을 클라별로 가지고 있는게 맞는거같은데?????
-	//std::lock_guard<std::mutex> pushQueueLock(m_sendQueueMutex);
+	// lock을 클라별로 가지고 있음.
 	std::lock_guard<std::mutex> pushQueueLock(m_clients[clientIndex].sendQueueMutex);
 	m_clients[clientIndex].sendQueue.push(str);
 	if (m_clients[clientIndex].sendQueue.size() == 1)
@@ -232,13 +220,18 @@ void IocpServer::send(ClientInfo& clientInfo)
 {
 	DWORD dumyRecvByte = 0;
 	DWORD dumyFlags = 0;
+	if (clientInfo.clientSocket == INVALID_SOCKET)
+	{
+		return;
+	}
 	/*size_t strLen = (clientInfo.sendQueue.front().size() > SOCKBUFFERSIZE) 
 		? (SOCKBUFFERSIZE) : (clientInfo.sendQueue.front().size());*/
-	size_t strLen = (clientInfo.sendQueue.front().size() > 2)
-		? (2) : (clientInfo.sendQueue.front().size());
+	//size_t strLen = (clientInfo.sendQueue.front().size() > 2)
+		//? (2) : (clientInfo.sendQueue.front().size());
 
 	clientInfo.sendOverlapped.wsaBuf.buf = &clientInfo.sendQueue.front()[0];
-	clientInfo.sendOverlapped.wsaBuf.len = strLen;
+	//clientInfo.sendOverlapped.wsaBuf.len = strLen;
+	clientInfo.sendOverlapped.wsaBuf.len = clientInfo.sendQueue.front().size();
 	clientInfo.sendOverlapped.ioOperation = IOOperation::SEND;
 
 	int rt = WSASend
@@ -308,6 +301,8 @@ void IocpServer::acceptThreadFunc()
 		}
 		std::cout << "accepted" << std::endl;
 		// recv등록.
+		// 접속 성공 패킷 sendqueue에 담기.
+		
 		recv(*emptyClientInfo);
 		std::cout << "recv " << std::endl;
 	}
@@ -324,6 +319,7 @@ void closeClient(ClientInfo& clientInfo, bool forceClose)
 	}
 	else
 	{
+		//ligerOpt = { 1, 0 };
 		ligerOpt = { 0, 0 };
 	}
 	shutdown(clientInfo.clientSocket, SD_BOTH);
@@ -336,7 +332,8 @@ void closeClient(ClientInfo& clientInfo, bool forceClose)
 		sizeof(ligerOpt)
 	);
 	closesocket(clientInfo.clientSocket);
-	clientInfo.clientSocket = INVALID_SOCKET;
+	clientInfo.clearClientInfo();
+	//clientInfo.clientSocket = INVALID_SOCKET;
 	std::cout << clientIndex << "out" << std::endl;
 }
 
@@ -347,6 +344,7 @@ void IocpServer::workerThreadFunc()
 	LPOVERLAPPED overlappedResultPtr;
 	ExOverlapped* exOverlappedPtr;
 	ClientInfo* clientInfoPtr = NULL;
+	uint16_t* packetSizePtr;
 	while (m_isWorkersRun.load())
 	{
 		//Sleep(5000);
@@ -379,8 +377,33 @@ void IocpServer::workerThreadFunc()
 		if (exOverlappedPtr->ioOperation == IOOperation::RECV)
 		{
 			//std::string recvStr(exOverlappedPtr->buf, transferredByte);
-			std::string recvStr(clientInfoPtr->recvBuf, transferredByte);
-			std::cout << clientInfoPtr->index  <<  " : " << recvStr;
+			//std::string recvStr(clientInfoPtr->recvBuf, transferredByte);\
+			// 1. 우선, 앞에 못받고 넘긴 데이터가 있는지 확인한다.
+			// 데이터의 맨 앞에는 전달될 총 버퍼의 크기가 있으니, 두 개를 합쳐서 그 크기가 되는지 확인한다.
+			// 만약, 그 크기보다 작으면 버퍼에 걍 다 합쳐버린다.
+			// 그 크기보다 크거나 같다면 전에 받은거랑 합쳐서 recvQeueu에 넣는다.
+			// 남은게 있다면 그 다음의 크기를 읽고, 다 안왔으면 버퍼에, 다왔으면 sendqueue에 넣는걸 반복한다.
+			char* bufferStart = clientInfoPtr->recvBuf;
+			uint32_t nowLen = transferredByte;
+			uint32_t beforeLen = clientInfoPtr->recvedLen;
+			// lock걸기
+			while (1)
+			{
+				packetSizePtr = reinterpret_cast<uint16_t*>(bufferStart);
+				// 덜 받은 경우, 이미 받은 길이를 갱신하여 탈출 
+				if ( nowLen + beforeLen < sizeof(PacketHeader::PacketLength)
+					|| *packetSizePtr > nowLen + beforeLen)
+				{
+					clientInfoPtr->recvedLen += nowLen;
+					break;
+				}
+				else
+				{
+					// 다 받은 경우 덜받은 길이 초기화 하고, recvQueue에 넣고, bufferStart갱신.
+					clientInfoPtr->recvedLen = 0;
+
+				}
+			}
 			{
 				std::lock_guard<std::mutex> recvQueueGuard(m_recvQueueMutex);
 				m_recvResultQueue.push(std::make_pair(clientInfoPtr->index, recvStr));

@@ -22,5 +22,5 @@ private:
 public:
 	Service(IocpServer* network, UserManager* userManager);
 	void runService(); //서비스 스레드를 돌리는 역할.
-
+	void joinService();
 };

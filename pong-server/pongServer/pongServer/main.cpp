@@ -11,16 +11,9 @@ int main()
 	network.upServer();
 	service.runService();
 	std::cout << "아무 키나 누를 때까지 대기합니다" << std::endl;
-	//while (true)
-	//{
-		std::string inputCmd;
-		std::getline(std::cin, inputCmd);
-
-		//if (inputCmd == "quit")
-		//{
-			//break;
-		//}
-	//}
+	std::string inputCmd;
+	std::getline(std::cin, inputCmd);
+	service.joinService();
 	network.downServer();
 	return 0;
 }

@@ -30,3 +30,9 @@ void Service::runService()
 		}
 	);
 }
+
+void Service::joinService()
+{
+	m_isServiceRun.store(false);
+	m_serviceThread.join();
+}

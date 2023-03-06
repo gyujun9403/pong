@@ -26,20 +26,24 @@ public:
 	SOCKET clientSocket = INVALID_SOCKET;
 	ExOverlapped recvOverlapped;
 	ExOverlapped sendOverlapped;
+
 	char recvBuf[SOCKBUFFERSIZE] = {};
+	uint32_t recvedLen = 0;
+	std::mutex recvBufMutex;
+
 	std::queue<std::string> sendQueue;
 	std::mutex sendQueueMutex;
-
-	ClientInfo() = delete;
-	ClientInfo(const ClientInfo& other) {}
-	ClientInfo(const uint32_t idx)
+	//ClientInfo(const ClientInfo& other) = delete;
+	ClientInfo() {};
+	~ClientInfo() {};
+	ClientInfo(const ClientInfo& other)
+	:index(other.index), clientSocket(other.clientSocket), recvOverlapped(other.recvOverlapped), sendOverlapped(other.sendOverlapped)
+	{}
+	//ClientInfo(const uint32_t idx)
+	//:index(idx) {}
+	void init(const uint32_t idx)
 	{
-		ZeroMemory(&recvOverlapped, sizeof(recvOverlapped));
-		ZeroMemory(&sendOverlapped, sizeof(sendOverlapped));
 		index = idx;
-	}
-	void init()
-	{
 		ZeroMemory(&recvOverlapped, sizeof(recvOverlapped));
 		ZeroMemory(&sendOverlapped, sizeof(sendOverlapped));
 	}
@@ -52,5 +56,8 @@ public:
 		{
 			sendQueue.pop();
 		}
+		clientSocket = INVALID_SOCKET;
+		ZeroMemory(&recvOverlapped, sizeof(recvOverlapped));
+		ZeroMemory(&sendOverlapped, sizeof(sendOverlapped));
 	}
 };

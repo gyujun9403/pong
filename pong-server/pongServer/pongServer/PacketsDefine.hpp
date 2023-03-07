@@ -3,6 +3,7 @@
 //
 
 #include <cstdint>
+#include "ErrorCode.hpp"
 
 enum class  PACKET_ID : uint16_t
 {
@@ -29,6 +30,7 @@ enum class  PACKET_ID : uint16_t
 	ROOM_CHAT_NOTIFY = 223,
 };
 
+#pragma pack(push, 1)
 struct PacketHeader
 {
 	uint16_t PacketLength;
@@ -52,5 +54,5 @@ const size_t LOGIN_REQUEST_PACKET_SZIE = sizeof(LOGIN_REQUEST_PACKET);
 
 struct LOGIN_RESPONSE_PACKET : public PacketHeader
 {
-	uint16_t Result;
+	ERROR_CODE Result;
 };

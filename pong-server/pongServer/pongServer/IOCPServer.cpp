@@ -198,11 +198,22 @@ void IocpServer::recv(ClientInfo& clientInfo)
 	}
 }
 
-void IocpServer::pushToSendQueue(uint16_t clientIndex, std::string str)
+//void IocpServer::pushToSendQueue(uint16_t clientIndex, std::string str)
+//{
+//	// lock을 클라별로 가지고 있음.
+//	std::lock_guard<std::mutex> pushQueueLock(m_clients[clientIndex].sendQueueMutex);
+//	m_clients[clientIndex].sendQueue.push(str);
+//	if (m_clients[clientIndex].sendQueue.size() == 1)
+//	{
+//		this->send(m_clients[clientIndex]);
+//	}
+//}
+
+void IocpServer::pushToSendQueue(uint16_t clientIndex, std::vector<char> packet)
 {
 	// lock을 클라별로 가지고 있음.
 	std::lock_guard<std::mutex> pushQueueLock(m_clients[clientIndex].sendQueueMutex);
-	m_clients[clientIndex].sendQueue.push(str);
+	m_clients[clientIndex].sendQueue.push(std::move(packet));
 	if (m_clients[clientIndex].sendQueue.size() == 1)
 	{
 		this->send(m_clients[clientIndex]);
@@ -355,7 +366,7 @@ void IocpServer::workerThreadFunc()
 	uint16_t* packetSizePtr;
 	while (m_isWorkersRun.load())
 	{
-		//Sleep(5000);
+		Sleep(5000);
 		rt = GetQueuedCompletionStatus
 		(
 			m_iocpHandle, 
@@ -401,12 +412,13 @@ void IocpServer::workerThreadFunc()
 				else
 				{
 					// 다 받은 경우 덜받은 길이 초기화 하고, recvQueue에 넣고, bufferStart갱신.
-					std::vector<char> temp(nowLen + beforeLen);
-					std::move(bufferStart, bufferStart + (nowLen + beforeLen), temp.begin());
-					m_recvResultQueue.push(std::make_pair(clientInfoPtr->index, std::move(temp)));
+					std::vector<char> temp(*packetSizePtr);
+					std::move(bufferStart, bufferStart + *packetSizePtr, temp.begin());
 					bufferStart += *packetSizePtr; // 헤더에 명시된 만큼 버퍼 이동
 					nowLen -= (*packetSizePtr - beforeLen);
 					beforeLen = 0;
+					std::lock_guard<std::mutex> recvResultQueueLock(m_recvQueueMutex);
+					m_recvResultQueue.push(std::make_pair(clientInfoPtr->index, std::move(temp)));
 				}
 			}
 			// 다시 recv걸기

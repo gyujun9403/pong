@@ -31,7 +31,7 @@ public:
 	uint32_t recvedLen = 0;
 	std::mutex recvBufMutex;
 
-	std::queue<std::string> sendQueue;
+	std::queue<std::vector<char> > sendQueue;
 	std::mutex sendQueueMutex;
 	//ClientInfo(const ClientInfo& other) = delete;
 	ClientInfo() {};

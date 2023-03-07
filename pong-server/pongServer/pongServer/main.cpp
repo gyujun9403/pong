@@ -9,6 +9,7 @@ int main()
 	Service service(&network, &userManager);
 	network.initServer();
 	network.upServer();
+	service.serviceInit();
 	service.runService();
 	std::cout << "아무 키나 누를 때까지 대기합니다" << std::endl;
 	std::string inputCmd;

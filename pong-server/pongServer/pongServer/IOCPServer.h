@@ -41,7 +41,8 @@ public:
 	IocpServer(uint32_t clientNum, uint16_t workerThreadNum, uint16_t port);
 	//IocpServer(UserManager* userManager, const uint16_t workerThreadNum, const uint16_t port);
 	~IocpServer() {}
-	void pushToSendQueue(uint16_t clientIndex, std::string str);
+	//void pushToSendQueue(uint16_t clientIndex, std::string str);
+	void pushToSendQueue(uint16_t clientIndex, std::vector<char> packet);
 	std::pair<int, std::vector<char> > getFromRecvQueue();
 	virtual bool initServer();
 	virtual bool upServer();

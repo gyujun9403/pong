@@ -34,6 +34,9 @@
     <ClCompile Include="Service.cpp">
       <Filter>Service</Filter>
     </ClCompile>
+    <ClCompile Include="RecvedData.hpp">
+      <Filter>Packet</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IOCPServer.h">

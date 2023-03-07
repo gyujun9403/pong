@@ -168,9 +168,14 @@ void IocpServer::recv(ClientInfo& clientInfo)
 {
 	DWORD dumyRecvByte = 0;
 	DWORD dumyFlags = 0;
-	//clientInfo.recvOverlapped.wsaBuf.buf = clientInfo.recvOverlapped.buf;
-	clientInfo.recvOverlapped.wsaBuf.buf = clientInfo.recvBuf;
-	clientInfo.recvOverlapped.wsaBuf.len = SOCKBUFFERSIZE;
+	/*clientInfo.recvOverlapped.wsaBuf.buf = clientInfo.recvBuf;
+	clientInfo.recvOverlapped.wsaBuf.len = SOCKBUFFERSIZE;*/
+	if (clientInfo.recvedLen >= SOCKBUFFERSIZE)
+	{
+		return;
+	}
+	clientInfo.recvOverlapped.wsaBuf.buf = clientInfo.recvBuf + clientInfo.recvedLen;
+	clientInfo.recvOverlapped.wsaBuf.len = SOCKBUFFERSIZE - clientInfo.recvedLen;
 	clientInfo.recvOverlapped.ioOperation = IOOperation::RECV;
 
 	int rtRecv = WSARecv
@@ -204,9 +209,10 @@ void IocpServer::pushToSendQueue(uint16_t clientIndex, std::string str)
 	}
 }
 
-std::pair<int, std::string> IocpServer::getFromRecvQueue()
+std::pair<int, std::vector<char> > IocpServer::getFromRecvQueue()
 {
-	std::pair<int, std::string> rt(-1, "");
+	std::pair<int, std::vector<char> > rt;
+	rt.first = -1;
 	std::lock_guard<std::mutex> pushQueueLock(m_recvQueueMutex);
 	if (!m_recvResultQueue.empty())
 	{
@@ -337,6 +343,8 @@ void closeClient(ClientInfo& clientInfo, bool forceClose)
 	std::cout << clientIndex << "out" << std::endl;
 }
 
+
+
 void IocpServer::workerThreadFunc()
 {
 	bool rt;
@@ -376,40 +384,32 @@ void IocpServer::workerThreadFunc()
 		exOverlappedPtr = reinterpret_cast<ExOverlapped*>(overlappedResultPtr);
 		if (exOverlappedPtr->ioOperation == IOOperation::RECV)
 		{
-			//std::string recvStr(exOverlappedPtr->buf, transferredByte);
-			//std::string recvStr(clientInfoPtr->recvBuf, transferredByte);\
-			// 1. 우선, 앞에 못받고 넘긴 데이터가 있는지 확인한다.
-			// 데이터의 맨 앞에는 전달될 총 버퍼의 크기가 있으니, 두 개를 합쳐서 그 크기가 되는지 확인한다.
-			// 만약, 그 크기보다 작으면 버퍼에 걍 다 합쳐버린다.
-			// 그 크기보다 크거나 같다면 전에 받은거랑 합쳐서 recvQeueu에 넣는다.
-			// 남은게 있다면 그 다음의 크기를 읽고, 다 안왔으면 버퍼에, 다왔으면 sendqueue에 넣는걸 반복한다.
 			char* bufferStart = clientInfoPtr->recvBuf;
 			uint32_t nowLen = transferredByte;
-			uint32_t beforeLen = clientInfoPtr->recvedLen;
+			uint32_t& beforeLen = clientInfoPtr->recvedLen;
 			// lock걸기
-			while (1)
+			while (nowLen != 0)
 			{
 				packetSizePtr = reinterpret_cast<uint16_t*>(bufferStart);
 				// 덜 받은 경우, 이미 받은 길이를 갱신하여 탈출 
 				if ( nowLen + beforeLen < sizeof(PacketHeader::PacketLength)
 					|| *packetSizePtr > nowLen + beforeLen)
 				{
-					clientInfoPtr->recvedLen += nowLen;
-					break;
+					beforeLen += nowLen;
+					nowLen = 0;
 				}
 				else
 				{
 					// 다 받은 경우 덜받은 길이 초기화 하고, recvQueue에 넣고, bufferStart갱신.
-					clientInfoPtr->recvedLen = 0;
-
+					std::vector<char> temp(nowLen + beforeLen);
+					std::move(bufferStart, bufferStart + (nowLen + beforeLen), temp.begin());
+					m_recvResultQueue.push(std::make_pair(clientInfoPtr->index, std::move(temp)));
+					bufferStart += *packetSizePtr; // 헤더에 명시된 만큼 버퍼 이동
+					nowLen -= (*packetSizePtr - beforeLen);
+					beforeLen = 0;
 				}
 			}
-			{
-				std::lock_guard<std::mutex> recvQueueGuard(m_recvQueueMutex);
-				m_recvResultQueue.push(std::make_pair(clientInfoPtr->index, recvStr));
-			}
-
-			//pushToSendQueue(clientInfoPtr->index, recvStr);
+			// 다시 recv걸기
 			recv(*clientInfoPtr);
 		}
 		else if (exOverlappedPtr->ioOperation == IOOperation::SEND)

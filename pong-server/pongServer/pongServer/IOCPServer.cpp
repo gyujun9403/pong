@@ -212,8 +212,12 @@ void IocpServer::recv(ClientInfo& clientInfo)
 void IocpServer::pushToSendQueue(uint16_t clientIndex, std::vector<char> packet)
 {
 	// lock을 클라별로 가지고 있음.
+	
 	std::lock_guard<std::mutex> pushQueueLock(m_clients[clientIndex].sendQueueMutex);
-	m_clients[clientIndex].sendQueue.push(std::move(packet));
+	//m_clients[clientIndex].sendQueue.push(std::move(packet));
+	m_clients[clientIndex].sendQueue.push(packet);
+	//std::vector<char>& forDebugVec = m_clients[clientIndex].sendQueue.front();
+	//packet.clear();
 	if (m_clients[clientIndex].sendQueue.size() == 1)
 	{
 		this->send(m_clients[clientIndex]);
@@ -244,11 +248,15 @@ void IocpServer::send(ClientInfo& clientInfo)
 	/*size_t strLen = (clientInfo.sendQueue.front().size() > SOCKBUFFERSIZE) 
 		? (SOCKBUFFERSIZE) : (clientInfo.sendQueue.front().size());*/
 	//size_t strLen = (clientInfo.sendQueue.front().size() > 2)
-		//? (2) : (clientInfo.sendQueue.front().size());
-
-	clientInfo.sendOverlapped.wsaBuf.buf = &clientInfo.sendQueue.front()[0];
+	//	? (2) : (clientInfo.sendQueue.front().size());
+	
+	size_t buffSize = clientInfo.sendQueue.front().size();
+	memcpy_s(clientInfo.sendBuf, SOCKBUFFERSIZE, &clientInfo.sendQueue.front()[0], buffSize);
+	//clientInfo.sendOverlapped.wsaBuf.buf = &clientInfo.sendQueue.front()[0];
+	//clientInfo.sendOverlapped.wsaBuf.len = clientInfo.sendQueue.front().size();
 	//clientInfo.sendOverlapped.wsaBuf.len = strLen;
-	clientInfo.sendOverlapped.wsaBuf.len = clientInfo.sendQueue.front().size();
+	clientInfo.sendOverlapped.wsaBuf.buf = clientInfo.sendBuf;
+	clientInfo.sendOverlapped.wsaBuf.len = buffSize;
 	clientInfo.sendOverlapped.ioOperation = IOOperation::SEND;
 
 	int rt = WSASend
@@ -366,7 +374,7 @@ void IocpServer::workerThreadFunc()
 	uint16_t* packetSizePtr;
 	while (m_isWorkersRun.load())
 	{
-		Sleep(5000);
+		//Sleep(5000);
 		rt = GetQueuedCompletionStatus
 		(
 			m_iocpHandle, 
@@ -386,7 +394,6 @@ void IocpServer::workerThreadFunc()
 		}
 		if (rt == false || (rt == true && transferredByte == 0))
 		{
-			//std::cout << "closeClient" << std::endl;
 			closeClient(*clientInfoPtr, false);
 			continue;
 			// 클라 접속 종료 -> 소캣 닫기
@@ -398,7 +405,7 @@ void IocpServer::workerThreadFunc()
 			char* bufferStart = clientInfoPtr->recvBuf;
 			uint32_t nowLen = transferredByte;
 			uint32_t& beforeLen = clientInfoPtr->recvedLen;
-			// lock걸기
+			// lock걸기? -> recv의 경우 다시 걸기 전까진 걸릴 이유 없으니 lock필요 없을듯
 			while (nowLen != 0)
 			{
 				packetSizePtr = reinterpret_cast<uint16_t*>(bufferStart);
@@ -414,14 +421,13 @@ void IocpServer::workerThreadFunc()
 					// 다 받은 경우 덜받은 길이 초기화 하고, recvQueue에 넣고, bufferStart갱신.
 					std::vector<char> temp(*packetSizePtr);
 					std::move(bufferStart, bufferStart + *packetSizePtr, temp.begin());
-					bufferStart += *packetSizePtr; // 헤더에 명시된 만큼 버퍼 이동
+					bufferStart += *packetSizePtr;
 					nowLen -= (*packetSizePtr - beforeLen);
 					beforeLen = 0;
 					std::lock_guard<std::mutex> recvResultQueueLock(m_recvQueueMutex);
 					m_recvResultQueue.push(std::make_pair(clientInfoPtr->index, std::move(temp)));
 				}
 			}
-			// 다시 recv걸기
 			recv(*clientInfoPtr);
 		}
 		else if (exOverlappedPtr->ioOperation == IOOperation::SEND)
@@ -433,7 +439,6 @@ void IocpServer::workerThreadFunc()
 					3. 만약 원소가 없다면 로직이 이상한 것 임. 삭제를 worker에서만 해줘야함.
 				2. queue에 남은 원소가 있다면(다 보냈던, 덜 보냈던) send를 걸어버린다.
 			*/
-			//std::lock_guard<std::mutex> sendGuard(m_sendQueueMutex);
 			std::lock_guard<std::mutex> sendGuard(clientInfoPtr->sendQueueMutex);
 			if (clientInfoPtr->sendQueue.size() == 0)
 			{
@@ -447,9 +452,10 @@ void IocpServer::workerThreadFunc()
 			else if (transferredByte < clientInfoPtr->sendQueue.front().size())
 			{
 				// 덜 보낸 경우
-				std::string tempStr = clientInfoPtr->sendQueue.front();
-				clientInfoPtr->sendQueue.front()
-					.assign(tempStr, transferredByte, tempStr.size() - transferredByte);
+				std::vector<char>& tempVec = clientInfoPtr->sendQueue.front();
+				//tempVec.assign(tempVec.begin() + transferredByte, tempVec.end());
+				std::move(tempVec.begin() + transferredByte, tempVec.end(), tempVec.begin());
+				tempVec.resize(tempVec.size() - transferredByte);
 			}
 			if (clientInfoPtr->sendQueue.size() > 0)
 			{

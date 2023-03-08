@@ -23,11 +23,12 @@ private:
 	void serviceThread();
 	std::atomic<bool> m_isServiceRun;
 	std::map<PACKET_ID, FuncType> m_packetProcessMap;
+	void pushPacketToSendQueue(int clinetIndex, char* packet, size_t length);
 public:
 	Service(IocpServer* network, UserManager* userManager);
 	void serviceInit();
 	void runService(); //서비스 스레드를 돌리는 역할.
 	void joinService();
 	int divergePackets(std::pair<int, std::vector<char> > packetSet);
-	int packetProcessLoginRequest(int clinetIndex, std::vector<char> packet);
+	int packetProcessLoginRequest(int clinetIndex, std::vector<char> ResPacket);
 };

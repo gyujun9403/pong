@@ -44,6 +44,7 @@ const uint32_t PacketHeader_LENGTH = sizeof(PacketHeader);
 const int MAX_USER_ID_LEN = 32;
 const int MAX_USER_PW_LEN = 32;
 
+#pragma pack(push, 1)
 struct LOGIN_REQUEST_PACKET : public PacketHeader
 {
 	char UserID[MAX_USER_ID_LEN + 1];
@@ -51,7 +52,7 @@ struct LOGIN_REQUEST_PACKET : public PacketHeader
 };
 const size_t LOGIN_REQUEST_PACKET_SZIE = sizeof(LOGIN_REQUEST_PACKET);
 
-
+#pragma pack(push, 1)
 struct LOGIN_RESPONSE_PACKET : public PacketHeader
 {
 	ERROR_CODE Result;

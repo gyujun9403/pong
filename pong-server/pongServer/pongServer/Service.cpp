@@ -7,31 +7,42 @@ Service::Service(IocpServer* network, UserManager* userManager)
 {
 }
 
-int Service::packetProcessLoginRequest(int clinetIndex, std::vector<char> packet)
-{
-	LOGIN_REQUEST_PACKET loginReq;
-	LOGIN_RESPONSE_PACKET loginRes;
-	std::move(packet.begin(), packet.end(), (char*)&loginReq);
-	std::cout << loginReq.UserID << ", " << loginReq.UserPW << std::endl;
-	loginRes.PacketId = PACKET_ID::LOGIN_RESPONSE;
-	loginRes.Result = ERROR_CODE::NONE;
-	loginRes.PacketLength = sizeof(LOGIN_RESPONSE_PACKET);
-	std::vector<char> res(loginRes.PacketLength);
-	std::move(&loginRes, &loginRes + loginRes.PacketLength, res);
-	m_network->pushToSendQueue(clinetIndex, std::move(res));
-	return 1;
-}
-
-void Service::serviceInit()
-{
-	m_packetProcessMap.emplace(PACKET_ID::LOGIN_REQUEST, std::bind(&Service::packetProcessLoginRequest, this, std::placeholders::_1, std::placeholders::_2));
-}
 
 int Service::divergePackets(std::pair<int, std::vector<char> > packetSet)
 {
 	PACKET_ID* packetId = reinterpret_cast<PACKET_ID*>(&packetSet.second[0] + sizeof(PacketHeader::PacketLength));
 
 	return m_packetProcessMap[*packetId](packetSet.first, packetSet.second);
+}
+
+void Service::pushPacketToSendQueue(int clinetIndex, char* packet, size_t length)
+{
+	std::vector<char> res(packet, packet + length);
+	res.resize(length);
+	m_network->pushToSendQueue(clinetIndex, std::move(res));
+}
+
+int Service::packetProcessLoginRequest(int clinetIndex, std::vector<char> ResPacket)
+{
+	LOGIN_REQUEST_PACKET loginReq;
+	LOGIN_RESPONSE_PACKET loginRes;
+	std::move(ResPacket.begin(), ResPacket.end(), (char*)&loginReq);
+	std::cout << loginReq.UserID << ", " << loginReq.UserPW << std::endl;
+
+	loginRes.PacketId = PACKET_ID::LOGIN_RESPONSE;
+	loginRes.Result = ERROR_CODE::NONE;
+	loginRes.PacketLength = sizeof(LOGIN_RESPONSE_PACKET);
+
+	pushPacketToSendQueue(clinetIndex, reinterpret_cast<char*>(&loginRes), sizeof(LOGIN_RESPONSE_PACKET));
+	return 1;
+}
+
+// 각 패킷들을 처리할 함수을 여기에 넣기.
+
+void Service::serviceInit()
+{
+	m_packetProcessMap.emplace(PACKET_ID::LOGIN_REQUEST, std::bind(&Service::packetProcessLoginRequest, this, std::placeholders::_1, std::placeholders::_2));
+	// 새로운 패킷과 처리 함수를 추가 할 때마다 emplace으로 추가해주면 됨.
 }
 
 void Service::serviceThread()

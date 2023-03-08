@@ -31,6 +31,7 @@ public:
 	uint32_t recvedLen = 0;
 	std::mutex recvBufMutex;
 
+	char sendBuf[SOCKBUFFERSIZE] = {};
 	std::queue<std::vector<char> > sendQueue;
 	std::mutex sendQueueMutex;
 	//ClientInfo(const ClientInfo& other) = delete;

@@ -4,10 +4,12 @@
 #include "IOCPServer.h"
 #include "ErrorCode.hpp"
 
+#define NO_USER -1
+
 class Room
 {
 private:
-	User* m_users[2] = { NULL };
+	int16_t m_usersIndex[2] = { NO_USER };
 	bool m_isGaming = false;
 	IocpServer* m_network;
 

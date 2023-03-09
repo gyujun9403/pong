@@ -30,11 +30,12 @@ int Service::packetProcessLoginRequest(int clinetIndex, std::vector<char> ReqPac
 	// 같은 id의 유저가 있는지 확인
 	loginRes.PacketId = PACKET_ID::LOGIN_RESPONSE;
 	loginRes.PacketLength = sizeof(LOGIN_RESPONSE_PACKET);
-	User* userRt = m_userManager->getUser(clinetIndex);
-	if (userRt != NULL)
+	std::pair<ERROR_CODE, User*> rt = m_userManager->getUser(clinetIndex);
+	if (rt.first == ERROR_CODE::NONE)
 	{
+		User* rtUser = rt.second;
 		//loginRes.Result = ERROR_CODE::LOGIN_USER_ALREADY;
-		if (userRt->checkPassword(loginReq.UserPW))
+		if (rtUser->checkPassword(loginReq.UserPW))
 		{
 			// 비밀번호가 같음 -> 이미 접속중
 			loginRes.Result = ERROR_CODE::LOGIN_USER_ALREADY;
@@ -46,17 +47,16 @@ int Service::packetProcessLoginRequest(int clinetIndex, std::vector<char> ReqPac
 	}
 	else
 	{
-		userRt = m_userManager->setUser(clinetIndex, loginReq.UserID, loginReq.UserPW);
-		if (userRt == NULL)
-		{
-			loginRes.Result = ERROR_CODE::LOGIN_USER_USED_ALL_OBJ;
-		}
-		else
+		rt = m_userManager->setUser(clinetIndex, loginReq.UserID, loginReq.UserPW);
+		if (rt.first == ERROR_CODE::NONE)
 		{
 			loginRes.Result = ERROR_CODE::NONE;
 		}
+		else
+		{
+			loginRes.Result = ERROR_CODE::LOGIN_USER_USED_ALL_OBJ;
+		}
 	}
-
 	pushPacketToSendQueue(clinetIndex, reinterpret_cast<char*>(&loginRes), sizeof(LOGIN_RESPONSE_PACKET));
 	return 1;
 }
@@ -100,6 +100,7 @@ void Service::serviceInit()
 
 void Service::serviceThread()
 {
+	int32_t closeUserIndex;
 	std::pair<int, std::vector<char> > recvRt;
 	while (m_isServiceRun.load())
 	{
@@ -107,6 +108,15 @@ void Service::serviceThread()
 		if (recvRt.first != -1)
 		{
 			divergePackets(std::move(recvRt));
+		}
+		closeUserIndex = m_network->getCloseUser();
+		if (closeUserIndex != -1)
+		{
+			//유저 방에서 제거
+			//유저 풀에서 제거
+			m_userManager->deleteUser(closeUserIndex);
+			//승부 판정
+			//유저 방 탈출 함수 호출
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}

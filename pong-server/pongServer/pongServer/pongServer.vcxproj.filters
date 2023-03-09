@@ -49,6 +49,9 @@
     <ClCompile Include="pong.cpp">
       <Filter>Game</Filter>
     </ClCompile>
+    <ClCompile Include="RoomManager.cpp">
+      <Filter>Room</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IOCPServer.h">
@@ -86,6 +89,9 @@
     </ClInclude>
     <ClInclude Include="IGame.h">
       <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="RoomManager.h">
+      <Filter>Room</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

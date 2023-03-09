@@ -14,10 +14,11 @@ bool User::isUsing() const
 	return false;
 }
 
-void User::setUser(std::string userId)
-{
-	m_userId = userId;
-}
+//void User::setUser(std::string userId)
+//{
+//	m_userId = userId;
+//	m_status = OCCUPIED::USING;
+//}
 
 void User::setUserReserved()
 {
@@ -36,7 +37,14 @@ void User::setUserEmpty()
 
 std::string User::getUserId()
 {
-	return m_userId;
+	if (m_status == OCCUPIED::USING)
+	{
+		return m_userId;
+	}
+	else
+	{
+		return "";
+	}
 }
 
 void User::useThisUser(uint16_t clientIndex, std::string userId, const std::string password)
@@ -44,6 +52,7 @@ void User::useThisUser(uint16_t clientIndex, std::string userId, const std::stri
 	m_status = OCCUPIED::USING;
 	m_clientIndex = clientIndex;
 	m_userId = userId;
+	m_password = password;
 }
 
 //ClientInfo* User::getClientInfo()

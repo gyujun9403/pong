@@ -132,6 +132,7 @@
     <ClCompile Include="pong.cpp" />
     <ClCompile Include="RecvedData.hpp" />
     <ClCompile Include="Room.cpp" />
+    <ClCompile Include="RoomManager.cpp" />
     <ClCompile Include="Service.cpp" />
     <ClCompile Include="User.cpp" />
     <ClCompile Include="UserManager.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="PacketsDefine.hpp" />
     <ClInclude Include="pong.h" />
     <ClInclude Include="Room.h" />
+    <ClInclude Include="RoomManager.h" />
     <ClInclude Include="Service.hpp" />
     <ClInclude Include="User.hpp" />
     <ClInclude Include="UserManager.hpp" />

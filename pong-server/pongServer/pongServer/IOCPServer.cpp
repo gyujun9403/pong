@@ -237,6 +237,18 @@ std::pair<int, std::vector<char> > IocpServer::getFromRecvQueue()
 	return rt;
 }
 
+int32_t IocpServer::getCloseUser()
+{
+	uint16_t closeUserIndex = -1;
+	std::lock_guard<std::mutex> closeUserLock(m_closedUserIndexQueueMutex);
+	if (m_closeUserIndexQueue.size() != 0)
+	{
+		closeUserIndex = m_closeUserIndexQueue.front();
+		m_closeUserIndexQueue.pop();
+	}
+	return closeUserIndex;
+}
+
 void IocpServer::send(ClientInfo& clientInfo)
 {
 	DWORD dumyRecvByte = 0;
@@ -334,8 +346,9 @@ void IocpServer::acceptThreadFunc()
 	std::cout << "accept stop" << std::endl;
 }
 
-void closeClient(ClientInfo& clientInfo, bool forceClose)
+void IocpServer::closeClient(ClientInfo& clientInfo, bool forceClose)
 {
+	// 유저 연결이 끊긴 경우....
 	uint32_t clientIndex = clientInfo.index;
 	struct linger ligerOpt;
 	if (forceClose == true)
@@ -360,6 +373,8 @@ void closeClient(ClientInfo& clientInfo, bool forceClose)
 	clientInfo.clearClientInfo();
 	//clientInfo.clientSocket = INVALID_SOCKET;
 	std::cout << clientIndex << "out" << std::endl;
+	std::lock_guard<std::mutex> closeUserLock(m_closedUserIndexQueueMutex);
+	m_closeUserIndexQueue.push(clientInfo.index);
 }
 
 

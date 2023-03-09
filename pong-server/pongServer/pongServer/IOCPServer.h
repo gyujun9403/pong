@@ -31,10 +31,11 @@ private:
 	std::atomic_bool m_isAccpterRun;
 	//UserManager* m_userManager;
 	std::mutex m_recvQueueMutex;
-	//std::queue<std::pair<int, std::string> > m_recvResultQueue;
 	std::queue<std::pair<int, std::vector<char> > > m_recvResultQueue;
-	//std::mutex m_sendQueueMutex;
-
+	
+	std::mutex m_closedUserIndexQueueMutex;
+	std::queue<int> m_closeUserIndexQueue;
+	void closeClient(ClientInfo& clientInfo, bool forceClose);
 public:
 	IocpServer() = delete;
 	// 서버 유저수, 워커스레드 개수
@@ -44,6 +45,7 @@ public:
 	//void pushToSendQueue(uint16_t clientIndex, std::string str);
 	void pushToSendQueue(uint16_t clientIndex, std::vector<char> packet);
 	std::pair<int, std::vector<char> > getFromRecvQueue();
+	int32_t getCloseUser();
 	virtual bool initServer();
 	virtual bool upServer();
 	virtual void downServer();

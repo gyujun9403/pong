@@ -14,7 +14,7 @@ private:
 	OCCUPIED m_status;
 	//ClientInfo m_clinetInfo;
 	std::string m_userId;
-	uint16_t m_clientIndex;
+	int16_t m_clientIndex;
 	std::string m_password;
 public:
 	User();
@@ -25,7 +25,7 @@ public:
 	*/
 	//clientInfo
 	bool isUsing() const;
-	void setUser(std::string userId);
+	//void setUser(std::string userId);
 	void setUserReserved();
 	void setUserUsing();
 	void setUserEmpty();

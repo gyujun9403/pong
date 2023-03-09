@@ -9,59 +9,57 @@ UserManager::UserManager(const uint16_t MaxUserNum)
 	}
 }
 
-User* UserManager::setUser(const uint16_t clientIndex, const std::string userId, const std::string password)
+std::pair<ERROR_CODE, User*> UserManager::setUser(const uint16_t clientIndex, const std::string userId, const std::string password)
 {
-	//유저 풀에서 빈거 찾아서 반 수정
-	for (uint16_t i = 0; i < m_UserPool.size(); i++)
+	if (m_UserPool[clientIndex].isUsing() == false)
 	{
-		if (m_UserPool[i].isUsing() == false)
-		{
-			m_UserPool[i].useThisUser(clientIndex, userId, password);
-			//m_userIdMap.insert(std::pair<std::string, int>(userId, elem.getClientInfoIndex()));
-			m_userIdMap.insert(std::pair<std::string, int>(userId, i));
-		}
+		m_UserPool[clientIndex].useThisUser(clientIndex, userId, password);
+		m_userIdMap.insert(std::pair<std::string, int>(userId, clientIndex));
+		return std::move(std::make_pair<ERROR_CODE, User*>(ERROR_CODE::NONE, &m_UserPool[clientIndex]));
 	}
-	// mapping에섣 ㅗ 수정
-	return NULL;
+	else
+	{
+		return std::make_pair<ERROR_CODE, User*>(ERROR_CODE::LOGIN_USER_ALREADY, &m_UserPool[clientIndex]);
+		//throw "INVALID USER POOL";
+	}
 }
 
-void UserManager::deleteUser(const uint16_t index)
+ERROR_CODE UserManager::deleteUser(const uint16_t index)
 {
 	User& user = m_UserPool.at(index);
-	m_userIdMap.erase(user.getUserId());
-	user.clearUser();
+	if (user.isUsing() == true)
+	{
+		m_userIdMap.erase(user.getUserId());
+		user.clearUser();
+		return ERROR_CODE::NONE;
+	}
+	else
+	{
+		return ERROR_CODE::ENTER_ROOM_NOT_FINDE_USER;
+	}
 }
 
-void UserManager::deleteUser(const std::string id)
+ERROR_CODE UserManager::deleteUser(const std::string id)
 {
 	//User& user = m_UserPool.at(m_userIdMap.find(id)->second);
-	this->deleteUser(m_userIdMap.find(id)->second);
+	return this->deleteUser(m_userIdMap.find(id)->second);
 }
 
-User* UserManager::getUser(const uint16_t index)
+std::pair<ERROR_CODE, User*> UserManager::getUser(const uint16_t ClientIndex)
 {
 	// TODO: 여기에 return 문을 삽입합니다.
-	return &m_UserPool.at(index);
+	if (m_UserPool[ClientIndex].isUsing() == true)
+	{
+		return std::make_pair<ERROR_CODE, User*>(ERROR_CODE::NONE, & m_UserPool.at(ClientIndex));
+	}
+	else
+	{
+		return std::make_pair<ERROR_CODE, User*>(ERROR_CODE::USER_MGR_INVALID_USER_INDEX, NULL);
+	}
 }
 
-User* UserManager::getUser(const std::string id)
+std::pair<ERROR_CODE, User*> UserManager::getUser(const std::string id)
 {
 	// TODO: 여기에 return 문을 삽입합니다.
 	return getUser(m_userIdMap.find(id)->second);
 }
-
-//ClientInfo* UserManager::getEmtyUser()
-//{
-//	ClientInfo* rt = NULL;
-//	for (User& elem : m_UserPool)
-//	{
-//		if (elem.isUsing() == false)
-//		{
-//			//elem.setUser(userId);
-//			elem.setUserReserved();
-//			//m_userIdMap.insert(std::pair<std::string, int>(userId, elem.getClientInfoIndex()));
-//			rt = elem.getClientInfo();
-//		}
-//	}
-//	return rt;
-//}

@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include "User.hpp"
+#include "ErrorCode.hpp"
 
 class UserManager
 {
@@ -16,10 +17,10 @@ private:
 	// 유저 추가/삭제시 User
 public:
 	UserManager(const uint16_t MaxUserNum);
-	User* setUser(const uint16_t clientIndex, const std::string userId, const std::string password);
-	void deleteUser(const uint16_t index);
-	void deleteUser(const std::string id);
-	User* getUser(const uint16_t index);
-	User* getUser(const std::string id);
+	std::pair<ERROR_CODE, User*> setUser(const uint16_t clientIndex, const std::string userId, const std::string password);
+	ERROR_CODE deleteUser(const uint16_t index);
+	ERROR_CODE deleteUser(const std::string id);
+	std::pair<ERROR_CODE, User*> getUser(const uint16_t index);
+	std::pair<ERROR_CODE, User*> getUser(const std::string id);
 	//ClientInfo* getEmtyUser();
 };

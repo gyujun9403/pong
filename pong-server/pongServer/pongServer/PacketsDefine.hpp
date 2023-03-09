@@ -1,7 +1,5 @@
 #pragma once
 
-//
-
 #include <cstdint>
 #include "ErrorCode.hpp"
 
@@ -44,7 +42,6 @@ const uint32_t PacketHeader_LENGTH = sizeof(PacketHeader);
 const int MAX_USER_ID_LEN = 32;
 const int MAX_USER_PW_LEN = 32;
 
-#pragma pack(push, 1)
 struct LOGIN_REQUEST_PACKET : public PacketHeader
 {
 	char UserID[MAX_USER_ID_LEN + 1];
@@ -52,8 +49,70 @@ struct LOGIN_REQUEST_PACKET : public PacketHeader
 };
 const size_t LOGIN_REQUEST_PACKET_SZIE = sizeof(LOGIN_REQUEST_PACKET);
 
-#pragma pack(push, 1)
 struct LOGIN_RESPONSE_PACKET : public PacketHeader
 {
 	ERROR_CODE Result;
 };
+
+//- 룸에 들어가기 요청
+//const int MAX_ROOM_TITLE_SIZE = 32;
+struct ROOM_ENTER_REQUEST_PACKET : public PacketHeader
+{
+	int32_t RoomNumber;
+};
+
+struct ROOM_ENTER_RESPONSE_PACKET : public PacketHeader
+{
+	uint16_t Result;
+	//char RivalUserID[MAX_USER_ID_LEN + 1] = { 0, };
+};
+
+struct ROOM_NEW_USER_NOTIFY_PACKET : public PacketHeader
+{
+	// list보내야 함.
+	/*
+	*        public int UserCount = 0;
+        public List<Int64> UserUniqueIdList = new List<Int64>();
+        public List<string> UserIDList = new List<string>();
+	*/
+};
+
+struct ROOM_USER_LIST_NOTIFY_PACKET : public PacketHeader
+{
+	int64_t UserUniqueId;
+	char UserID[MAX_USER_ID_LEN + 1];
+};
+
+//- 룸 나가기 요청
+struct ROOM_LEAVE_REQUEST_PACKET : public PacketHeader
+{
+};
+
+struct ROOM_LEAVE_RESPONSE_PACKET : public PacketHeader
+{
+	uint16_t Result;
+};
+
+struct ROOM_LEAVE_NORITY_PACKET : public PacketHeader
+{
+	int64_t UserUniqueId;
+};
+
+// 룸 채팅
+const int MAX_CHAT_MSG_SIZE = 256;
+struct ROOM_CHAT_REQUEST_PACKET : public PacketHeader
+{
+	char Message[MAX_CHAT_MSG_SIZE + 1] = { 0, };
+};
+
+struct ROOM_CHAT_RESPONSE_PACKET : public PacketHeader
+{
+	INT16 Result;
+};
+
+struct ROOM_CHAT_NOTIFY_PACKET : public PacketHeader
+{
+	char UserID[MAX_USER_ID_LEN + 1] = { 0, };
+	char Msg[MAX_CHAT_MSG_SIZE + 1] = { 0, };
+};
+#pragma pack(pop)

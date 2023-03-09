@@ -28,10 +28,35 @@ int Service::packetProcessLoginRequest(int clinetIndex, std::vector<char> ResPac
 	LOGIN_RESPONSE_PACKET loginRes;
 	std::move(ResPacket.begin(), ResPacket.end(), (char*)&loginReq);
 	std::cout << loginReq.UserID << ", " << loginReq.UserPW << std::endl;
-
+	// 같은 id의 유저가 있는지 확인
 	loginRes.PacketId = PACKET_ID::LOGIN_RESPONSE;
-	loginRes.Result = ERROR_CODE::NONE;
 	loginRes.PacketLength = sizeof(LOGIN_RESPONSE_PACKET);
+	User* userRt = m_userManager->getUser(clinetIndex);
+	if (userRt != NULL)
+	{
+		//loginRes.Result = ERROR_CODE::LOGIN_USER_ALREADY;
+		if (userRt->checkPassword(loginReq.UserPW))
+		{
+			// 비밀번호가 같음 -> 이미 접속중
+			loginRes.Result = ERROR_CODE::LOGIN_USER_ALREADY;
+		}
+		else
+		{
+			loginRes.Result = ERROR_CODE::LOGIN_USER_INVALID_PW;
+		}
+	}
+	else
+	{
+		userRt = m_userManager->setUser(clinetIndex, loginReq.UserID, loginReq.UserPW);
+		if (userRt == NULL)
+		{
+			loginRes.Result = ERROR_CODE::LOGIN_USER_USED_ALL_OBJ;
+		}
+		else
+		{
+			loginRes.Result = ERROR_CODE::NONE;
+		}
+	}
 
 	pushPacketToSendQueue(clinetIndex, reinterpret_cast<char*>(&loginRes), sizeof(LOGIN_RESPONSE_PACKET));
 	return 1;

@@ -9,14 +9,14 @@ UserManager::UserManager(const uint16_t MaxUserNum)
 	}
 }
 
-User* UserManager::setUser(const uint16_t clientIndex, const std::string userId)
+User* UserManager::setUser(const uint16_t clientIndex, const std::string userId, const std::string password)
 {
 	//유저 풀에서 빈거 찾아서 반 수정
 	for (uint16_t i = 0; i < m_UserPool.size(); i++)
 	{
 		if (m_UserPool[i].isUsing() == false)
 		{
-			m_UserPool[i].useThisUser(clientIndex, userId);
+			m_UserPool[i].useThisUser(clientIndex, userId, password);
 			//m_userIdMap.insert(std::pair<std::string, int>(userId, elem.getClientInfoIndex()));
 			m_userIdMap.insert(std::pair<std::string, int>(userId, i));
 		}

@@ -39,7 +39,7 @@ std::string User::getUserId()
 	return m_userId;
 }
 
-void User::useThisUser(uint16_t clientIndex, std::string userId)
+void User::useThisUser(uint16_t clientIndex, std::string userId, const std::string password)
 {
 	m_status = OCCUPIED::USING;
 	m_clientIndex = clientIndex;
@@ -61,4 +61,9 @@ void User::clearUser()
 {
 	m_status = OCCUPIED::EMPTY;
 	//m_clinetInfo.clearClientInfo();
+}
+
+bool User::checkPassword(std::string inputPassword)
+{
+	return (inputPassword == m_password);
 }

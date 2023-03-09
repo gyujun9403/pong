@@ -16,7 +16,7 @@ private:
 	// 유저 추가/삭제시 User
 public:
 	UserManager(const uint16_t MaxUserNum);
-	User* setUser(const uint16_t clientIndex, const std::string userId);
+	User* setUser(const uint16_t clientIndex, const std::string userId, const std::string password);
 	void deleteUser(const uint16_t index);
 	void deleteUser(const std::string id);
 	User* getUser(const uint16_t index);

@@ -13,11 +13,12 @@ private:
 
 	OCCUPIED m_status;
 	//ClientInfo m_clinetInfo;
+	std::string m_userId;
+	uint16_t m_clientIndex;
+	std::string m_password;
 public:
 	User();
 	//User(const uint16_t index);
-	std::string m_userId;
-	uint16_t m_clientIndex;
 	// 필요하다고 생각되는 유저 정보.
 	/*
 	* std::string pass;...
@@ -29,6 +30,7 @@ public:
 	void setUserUsing();
 	void setUserEmpty();
 	std::string getUserId();
-	void useThisUser(uint16_t clientIndex, std::string userId);
+	void useThisUser(uint16_t clientIndex, std::string userId, const std::string password);
 	void clearUser();
+	bool checkPassword(std::string inputPassword);
 };

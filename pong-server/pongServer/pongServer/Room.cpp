@@ -36,5 +36,29 @@ ERROR_CODE Room::enterUser(uint16_t clientIndex)
 
 ERROR_CODE Room::leaveUser(uint16_t clientIndex)
 {
-	return ERROR_CODE();
+	if (m_usersIndex[0] == clientIndex)
+	{
+		m_usersIndex[0] = NO_USER;
+	}
+	else if (m_usersIndex[1] == clientIndex)
+	{
+		m_usersIndex[1] = NO_USER;
+	}
+	else
+	{
+		return ERROR_CODE::ROOM_USER_CANT_FIND;
+	}
+}
+
+RoomStatus Room::getRoomStatus()
+{
+	return m_roomStatus;
+}
+
+bool Room::isRoomEnable()
+{
+	if (m_usersIndex[0] == NO_USER || m_usersIndex[1] == NO_USER)
+	{
+		return true;
+	}
 }

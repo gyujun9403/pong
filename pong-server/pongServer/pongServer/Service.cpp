@@ -114,6 +114,7 @@ void Service::serviceThread()
 		{
 			//유저 방에서 제거
 			//유저 풀에서 제거
+			m_roomManager.
 			m_userManager->deleteUser(closeUserIndex);
 			//승부 판정
 			//유저 방 탈출 함수 호출

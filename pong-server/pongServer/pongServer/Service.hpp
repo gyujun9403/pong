@@ -5,6 +5,7 @@
 #include <map>
 #include <functional>
 #include "UserManager.hpp"
+#include "RoomManager.h"
 #include "IOCPServer.h"
 #include "PacketsDefine.hpp"
 
@@ -20,6 +21,7 @@ private:
 	std::thread m_serviceThread;
 	IocpServer* m_network;
 	UserManager* m_userManager;
+	RoomManager* m_roomManager;
 	void serviceThread();
 	std::atomic<bool> m_isServiceRun;
 	std::map<PACKET_ID, FuncType> m_packetProcessMap;

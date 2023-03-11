@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <cstdint>
 #include "User.hpp"
 #include "Room.h"
 #include "ErrorCode.hpp"
@@ -12,10 +13,12 @@
 class RoomManager
 {
 private:
+	const uint16_t m_maxRoomNum;
 	std::vector<Room> m_roomPool;
 	std::map<uint16_t, uint16_t> m_userRoomMap;
+
 public:
-	
+	RoomManager(uint16_t maxRoomNum);
 	// 유저가 들어있는 방을 찾는 기능
 	std::pair<ERROR_CODE, Room*> findRoomUserIn(uint16_t userIndex);
 	// 방에 특정 유저를 넣는 기능.

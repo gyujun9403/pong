@@ -239,7 +239,8 @@ std::pair<int, std::vector<char> > IocpServer::getFromRecvQueue()
 
 int32_t IocpServer::getCloseUser()
 {
-	uint16_t closeUserIndex = -1;
+	int32_t closeUserIndex = -1;
+	//uint32_t closeUserIndex = 1;
 	std::lock_guard<std::mutex> closeUserLock(m_closedUserIndexQueueMutex);
 	if (m_closeUserIndexQueue.size() != 0)
 	{

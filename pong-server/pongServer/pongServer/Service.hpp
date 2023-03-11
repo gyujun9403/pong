@@ -22,12 +22,13 @@ private:
 	IocpServer* m_network;
 	UserManager* m_userManager;
 	RoomManager* m_roomManager;
-	void serviceThread();
 	std::atomic<bool> m_isServiceRun;
 	std::map<PACKET_ID, FuncType> m_packetProcessMap;
+	void serviceThread();
 	void pushPacketToSendQueue(int clinetIndex, char* packet, size_t length);
+	ROOM_USER_LIST_NOTIFY_PACKET makeUserListPacket(std::vector<uint16_t> userInRoomList);
 public:
-	Service(IocpServer* network, UserManager* userManager);
+	Service(IocpServer* network, UserManager* userManager, RoomManager* roomManager);
 	void serviceInit();
 	void runService(); //서비스 스레드를 돌리는 역할.
 	void joinService();

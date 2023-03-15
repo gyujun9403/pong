@@ -23,6 +23,12 @@
     <Filter Include="Game">
       <UniqueIdentifier>{e9b3f821-a08a-4c05-bfdb-b2d155f8889b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DB">
+      <UniqueIdentifier>{c8c991b7-eaf3-46c5-ac11-7fec0f2d6218}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DB\Redis">
+      <UniqueIdentifier>{772810d8-40fb-43e2-9f54-8a0c434fa9c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IOCPServer.cpp">
@@ -51,6 +57,12 @@
     </ClCompile>
     <ClCompile Include="RoomManager.cpp">
       <Filter>Room</Filter>
+    </ClCompile>
+    <ClCompile Include="RedisMatching.cpp">
+      <Filter>DB\Redis</Filter>
+    </ClCompile>
+    <ClCompile Include="GameUserInfo.cpp">
+      <Filter>DB\Redis</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +104,12 @@
     </ClInclude>
     <ClInclude Include="RoomManager.h">
       <Filter>Room</Filter>
+    </ClInclude>
+    <ClInclude Include="RedisMatching.hpp">
+      <Filter>DB\Redis</Filter>
+    </ClInclude>
+    <ClInclude Include="GameUserInfo.h">
+      <Filter>DB\Redis</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

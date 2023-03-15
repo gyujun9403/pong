@@ -177,7 +177,6 @@ void IocpServer::recv(ClientInfo& clientInfo)
 	clientInfo.recvOverlapped.wsaBuf.buf = clientInfo.recvBuf + clientInfo.recvedLen;
 	clientInfo.recvOverlapped.wsaBuf.len = SOCKBUFFERSIZE - clientInfo.recvedLen;
 	clientInfo.recvOverlapped.ioOperation = IOOperation::RECV;
-
 	int rtRecv = WSARecv
 	(
 		clientInfo.clientSocket,
@@ -198,16 +197,7 @@ void IocpServer::recv(ClientInfo& clientInfo)
 	}
 }
 
-//void IocpServer::pushToSendQueue(uint16_t clientIndex, std::string str)
-//{
-//	// lock을 클라별로 가지고 있음.
-//	std::lock_guard<std::mutex> pushQueueLock(m_clients[clientIndex].sendQueueMutex);
-//	m_clients[clientIndex].sendQueue.push(str);
-//	if (m_clients[clientIndex].sendQueue.size() == 1)
-//	{
-//		this->send(m_clients[clientIndex]);
-//	}
-//}
+
 
 void IocpServer::pushToSendQueue(uint16_t clientIndex, std::vector<char> packet)
 {
@@ -410,6 +400,8 @@ void IocpServer::workerThreadFunc()
 		}
 		if (rt == false || (rt == true && transferredByte == 0))
 		{
+			//while
+			//clientInfoPtr->m_isDisconnecting.compare_exchange_strong(true)
 			closeClient(*clientInfoPtr, false);
 			continue;
 			// 클라 접속 종료 -> 소캣 닫기

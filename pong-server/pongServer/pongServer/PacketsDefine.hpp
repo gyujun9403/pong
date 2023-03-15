@@ -29,6 +29,15 @@ enum class  PACKET_ID : uint16_t
 	ROOM_CHAT_REQUEST = 221,
 	ROOM_CHAT_RESPONSE = 222,
 	ROOM_CHAT_NOTIFY = 223,
+
+	ROOM_READY_REQ = 224,
+	ROOM_READY_RES = 225,
+	ROOM_READY_NOTIFY = 226,
+
+	GAME_START_NOTIFY = 300,
+	GAME_LAPSE_NOTIFY = 301,
+	GAME_CONTROL_REQ = 302,
+	GAME_RESULT_NOTIFY = 303,
 };
 
 #pragma pack(push, 1)
@@ -141,5 +150,22 @@ struct ROOM_CHAT_NOTIFY_PACKET : public PacketHeader
 {
 	char UserID[MAX_USER_ID_LEN + 1] = { 0, };
 	char Msg[MAX_CHAT_MSG_SIZE + 1] = { 0, };
+};
+
+struct ROOM_READY_REQUEST_PACKET : public PacketHeader
+{
+	bool isReady;
+};
+
+struct ROOM_READY_RESPONSE_PACKET : public PacketHeader
+{
+	ERROR_CODE Result;
+	bool isReady;
+};
+
+struct ROOM_READY_NOTIFY_PACKET : public PacketHeader
+{
+	int64_t UserUniqueId;
+	bool isReady;
 };
 #pragma pack(pop)

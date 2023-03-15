@@ -24,17 +24,28 @@ ERROR_CODE Room::enterUser(uint16_t clientIndex)
 	{
 		return ERROR_CODE::ENTER_ROOM_FULL_USER;
 	}
-	else if (std::find(m_usersIndex.begin(), m_usersIndex.end(), clientIndex) != m_usersIndex.end())
+	auto iter = std::find_if(m_usersIndex.begin(), m_usersIndex.end(),
+		[clientIndex](const std::pair<uint16_t, bool>& p)
+		{
+			return p.first == clientIndex;
+		}
+	);
+	if (iter != m_usersIndex.end())
 	{
 		return ERROR_CODE::ENTER_ROOM_INVALID_USER_STATUS;
 	}
-	m_usersIndex.push_back(clientIndex);
+	m_usersIndex.push_back(std::move(std::make_pair(clientIndex, false)));
 	return ERROR_CODE::NONE;
 }
 
 ERROR_CODE Room::leaveUser(uint16_t clientIndex)
 {
-	std::vector<uint16_t>::iterator iter = std::find(m_usersIndex.begin(), m_usersIndex.end(), clientIndex);
+	auto iter = std::find_if (m_usersIndex.begin(), m_usersIndex.end(),
+		[clientIndex](const std::pair<uint16_t, bool>& p)
+		{
+			return p.first == clientIndex;
+		}
+	);
 	if (iter == m_usersIndex.end())
 	{
 		return ERROR_CODE::ROOM_USER_CANT_FIND;
@@ -43,14 +54,54 @@ ERROR_CODE Room::leaveUser(uint16_t clientIndex)
 	return ERROR_CODE::NONE;
 }
 
+bool Room::setUserReady(uint16_t clientIndex, bool ready)
+{
+	auto iter = std::find_if(m_usersIndex.begin(), m_usersIndex.end(),
+		[clientIndex](const std::pair<uint16_t, bool>& p)
+		{
+			return p.first == clientIndex;
+		}
+	);
+	if (iter == m_usersIndex.end())
+	{
+		return false;
+	}
+	iter->second = ready;
+	return ready; 
+}
+
+bool Room::isAllUserReady()
+{
+	for (std::pair<uint16_t, bool>& elem : m_usersIndex)
+	{
+		if (elem.second == false)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 RoomStatus Room::getRoomStatus()
 {
 	return m_roomStatus;
 }
 
+void Room::setRoomStatus(RoomStatus status)
+{
+	m_roomStatus = status;
+}
+
 std::vector<uint16_t> Room::getAllUsers()
 {
-	return m_usersIndex;
+	std::vector<uint16_t> rtVec;
+	std::transform(m_usersIndex.begin(), m_usersIndex.end(), std::back_inserter(rtVec),
+		[](const std::pair<uint16_t, bool>& p)
+		{
+			return p.first;
+		}
+	);
+	return std::move(rtVec);
 }
 
 bool Room::isRoomEnable()

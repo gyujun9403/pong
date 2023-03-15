@@ -50,7 +50,7 @@ std::pair<ERROR_CODE, User*> UserManager::getUser(const uint16_t ClientIndex)
 	// TODO: 여기에 return 문을 삽입합니다.
 	if (m_UserPool[ClientIndex].isUsing() == true)
 	{
-		return std::make_pair<ERROR_CODE, User*>(ERROR_CODE::NONE, & m_UserPool.at(ClientIndex));
+		return std::make_pair<ERROR_CODE, User*>(ERROR_CODE::NONE, &m_UserPool.at(ClientIndex));
 	}
 	else
 	{
@@ -61,5 +61,18 @@ std::pair<ERROR_CODE, User*> UserManager::getUser(const uint16_t ClientIndex)
 std::pair<ERROR_CODE, User*> UserManager::getUser(const std::string id)
 {
 	// TODO: 여기에 return 문을 삽입합니다.
-	return getUser(m_userIdMap.find(id)->second);
+	if (m_userIdMap.find(id) == m_userIdMap.end())
+	{
+		return std::make_pair<ERROR_CODE, User*>(ERROR_CODE::USER_MGR_INVALID_USER_UNIQUEID, NULL);
+	}
+	return getUser(m_userIdMap[id]);
+}
+
+ERROR_CODE UserManager::checkId(const std::string id)
+{
+	if (m_userIdMap.find(id) != m_userIdMap.end())
+	{
+		return ERROR_CODE::USER_MGR_INVALID_USER_UNIQUEID;
+	}
+	return ERROR_CODE::NONE;
 }

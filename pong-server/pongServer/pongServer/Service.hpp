@@ -8,6 +8,7 @@
 #include "RoomManager.h"
 #include "IOCPServer.h"
 #include "PacketsDefine.hpp"
+#include "RedisMatching.hpp"
 
 #define PORT 3334
 #define WORKER_THREAD_NUM 4
@@ -22,13 +23,14 @@ private:
 	IocpServer* m_network;
 	UserManager* m_userManager;
 	RoomManager* m_roomManager;
+	RedisMatching* m_matchingManager;
 	std::atomic<bool> m_isServiceRun;
 	std::map<PACKET_ID, FuncType> m_packetProcessMap;
 	void serviceThread();
 	void pushPacketToSendQueue(int clinetIndex, char* packet, size_t length);
 	ROOM_USER_LIST_NOTIFY_PACKET makeUserListPacket(std::vector<uint16_t> userInRoomList);
 public:
-	Service(IocpServer* network, UserManager* userManager, RoomManager* roomManager);
+	Service(IocpServer* network, UserManager* userManager, RoomManager* roomManager, RedisMatching* matchingManager);
 	void serviceInit();
 	void runService(); //서비스 스레드를 돌리는 역할.
 	void joinService();
@@ -37,4 +39,5 @@ public:
 	int packetProcessRoomEnterRequest(int clinetIndex, std::vector<char> ReqPacket);
 	int packetProcessRoomLeaveRequest(int clinetIndex, std::vector<char> ReqPacket);
 	int packetProcessRoomChatRequest(int clinetIndex, std::vector<char> ReqPacket);
+	int packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> ReqPacket);
 };

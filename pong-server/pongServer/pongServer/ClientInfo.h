@@ -6,7 +6,8 @@
 #include <mutex>
 #include <winsock2.h>
 
-const UINT32 SOCKBUFFERSIZE = 256;
+//const UINT32 SOCKBUFFERSIZE = 256;
+const UINT32 SOCKBUFFERSIZE = 300;
 
 enum class IOOperation { RECV, SEND };
 
@@ -34,14 +35,13 @@ public:
 	char sendBuf[SOCKBUFFERSIZE] = {};
 	std::queue<std::vector<char> > sendQueue;
 	std::mutex sendQueueMutex;
-	//ClientInfo(const ClientInfo& other) = delete;
+
+	//std::atomic<bool> m_isDisconnecting = false;
 	ClientInfo() {};
 	~ClientInfo() {};
 	ClientInfo(const ClientInfo& other)
 	:index(other.index), clientSocket(other.clientSocket), recvOverlapped(other.recvOverlapped), sendOverlapped(other.sendOverlapped)
 	{}
-	//ClientInfo(const uint32_t idx)
-	//:index(idx) {}
 	void init(const uint32_t idx)
 	{
 		index = idx;

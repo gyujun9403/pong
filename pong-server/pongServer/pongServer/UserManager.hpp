@@ -22,5 +22,6 @@ public:
 	ERROR_CODE deleteUser(const std::string id);
 	std::pair<ERROR_CODE, User*> getUser(const uint16_t index);
 	std::pair<ERROR_CODE, User*> getUser(const std::string id);
+	ERROR_CODE checkId(const std::string id);
 	//ClientInfo* getEmtyUser();
 };

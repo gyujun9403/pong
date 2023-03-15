@@ -1,0 +1,7 @@
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/hiredis.dir/MinSizeRel/alloc.obj
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/hiredis.dir/MinSizeRel/async.obj
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/hiredis.dir/MinSizeRel/hiredis.obj
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/hiredis.dir/MinSizeRel/net.obj
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/hiredis.dir/MinSizeRel/read.obj
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/hiredis.dir/MinSizeRel/sds.obj
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/hiredis.dir/MinSizeRel/sockcompat.obj

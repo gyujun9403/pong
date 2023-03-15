@@ -1,0 +1,7 @@
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/CMakeFiles/hiredis.dir
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/CMakeFiles/hiredis-test.dir
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/CMakeFiles/PACKAGE.dir
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/CMakeFiles/RUN_TESTS.dir
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/CMakeFiles/INSTALL.dir
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/CMakeFiles/ALL_BUILD.dir
+C:/Users/gujun/git/pong/pong-server/pongServer/Libraries/hiredis/CMakeFiles/ZERO_CHECK.dir

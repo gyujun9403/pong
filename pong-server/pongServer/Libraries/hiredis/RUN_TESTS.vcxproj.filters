@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\gujun\git\pong\pong-server\pongServer\Libraries\hiredis\CMakeFiles\7fb5297d5e0d0d9f6eaeaadd712f15f1\RUN_TESTS_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{7DB70FCC-A158-391F-8B28-FC9C412C25A3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

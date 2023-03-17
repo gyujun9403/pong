@@ -5,8 +5,8 @@
 class GameUserInfo
 {
 	uint16_t m_clinetIndex;
-	std::string m_clientId;
 public:
-	void init(uint16_t clinetIndex, std::string clientId);
+	GameUserInfo(uint16_t clinetIndex);
+	void init(uint16_t clinetIndex);
 	std::string toString();
 };

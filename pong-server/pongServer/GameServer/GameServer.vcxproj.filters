@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="main">
+      <UniqueIdentifier>{d9d1cd24-dd2a-404e-abb8-708be2fc26dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{a2ca4f73-013c-48b3-9af9-1cebc87fb3e7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pongServer\ClientInfo.cpp" />
+    <ClCompile Include="..\pongServer\IOCPServer.cpp" />
+    <ClCompile Include="..\pongServer\RedisMatching.cpp" />
+    <ClCompile Include="..\pongServer\GameUserInfo.cpp" />
+    <ClCompile Include="GameManager.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\pongServer\ClientInfo.h" />
+    <ClInclude Include="..\pongServer\IOCPServer.h" />
+    <ClInclude Include="..\pongServer\IServer.h" />
+    <ClInclude Include="..\pongServer\RedisMatching.hpp" />
+    <ClInclude Include="..\pongServer\GameUserInfo.h" />
+    <ClInclude Include="GameManager.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{e66e3aca-9018-469f-aa39-c6bb940f2428}</ProjectGuid>
-    <RootNamespace>pongServer</RootNamespace>
+    <ProjectGuid>{638439e8-d867-4cae-b779-57418b8cd163}</ProjectGuid>
+    <RootNamespace>GameServer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -43,7 +43,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>..\Libraries\hiredis;$(IncludePath)</IncludePath>
+    <IncludePath>..\Libraries\hiredis;..\pongServer;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -105,10 +105,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;WINDOWS_IGNORE_PACKING_MISMATCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\Libraries\hiredis;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <StructMemberAlignment>Default</StructMemberAlignment>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,33 +133,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GameUserInfo.cpp" />
-    <ClCompile Include="IOCPServer.cpp" />
+    <ClCompile Include="..\pongServer\ClientInfo.cpp" />
+    <ClCompile Include="..\pongServer\GameUserInfo.cpp" />
+    <ClCompile Include="..\pongServer\IOCPServer.cpp" />
+    <ClCompile Include="..\pongServer\RedisMatching.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="pong.cpp" />
-    <ClCompile Include="RecvedData.hpp" />
-    <ClCompile Include="RedisMatching.cpp" />
-    <ClCompile Include="Room.cpp" />
-    <ClCompile Include="RoomManager.cpp" />
-    <ClCompile Include="Service.cpp" />
-    <ClCompile Include="User.cpp" />
-    <ClCompile Include="UserManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClientInfo.h" />
-    <ClInclude Include="ErrorCode.hpp" />
-    <ClInclude Include="GameUserInfo.h" />
-    <ClInclude Include="IGame.h" />
-    <ClInclude Include="IOCPServer.h" />
-    <ClInclude Include="IServer.h" />
-    <ClInclude Include="PacketsDefine.hpp" />
-    <ClInclude Include="pong.h" />
-    <ClInclude Include="RedisMatching.hpp" />
-    <ClInclude Include="Room.h" />
-    <ClInclude Include="RoomManager.h" />
-    <ClInclude Include="Service.hpp" />
-    <ClInclude Include="User.hpp" />
-    <ClInclude Include="UserManager.hpp" />
+    <ProjectReference Include="..\pongServer\pongServer.vcxproj">
+      <Project>{e66e3aca-9018-469f-aa39-c6bb940f2428}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\pongServer\ClientInfo.h" />
+    <ClInclude Include="..\pongServer\GameUserInfo.h" />
+    <ClInclude Include="..\pongServer\IOCPServer.h" />
+    <ClInclude Include="..\pongServer\IServer.h" />
+    <ClInclude Include="..\pongServer\RedisMatching.hpp" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GameManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

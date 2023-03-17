@@ -1,12 +1,16 @@
 #include "GameUserInfo.h"
 
-void GameUserInfo::init(uint16_t clinetIndex, std::string clientId)
+GameUserInfo::GameUserInfo(uint16_t clinetIndex)
+:m_clinetIndex(clinetIndex)
+{
+}
+
+void GameUserInfo::init(uint16_t clinetIndex)
 {
 	m_clinetIndex = clinetIndex;
-	m_clientId = clientId;
 }
 std::string GameUserInfo::toString()
 {
 	std::string num = std::to_string(m_clinetIndex);
-	return "????";
+	return num;
 }

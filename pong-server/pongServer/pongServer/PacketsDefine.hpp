@@ -38,6 +38,8 @@ enum class  PACKET_ID : uint16_t
 	GAME_LAPSE_NOTIFY = 301,
 	GAME_CONTROL_REQ = 302,
 	GAME_RESULT_NOTIFY = 303,
+	GAME_ENTER_REQ = 304,
+	GAME_ENTER_RES = 305,
 };
 
 #pragma pack(push, 1)
@@ -152,20 +154,62 @@ struct ROOM_CHAT_NOTIFY_PACKET : public PacketHeader
 	char Msg[MAX_CHAT_MSG_SIZE + 1] = { 0, };
 };
 
+#pragma pack(push, 1)
 struct ROOM_READY_REQUEST_PACKET : public PacketHeader
 {
 	bool isReady;
 };
 
+#pragma pack(push, 1)
 struct ROOM_READY_RESPONSE_PACKET : public PacketHeader
 {
 	ERROR_CODE Result;
 	bool isReady;
 };
 
+#pragma pack(push, 1)
 struct ROOM_READY_NOTIFY_PACKET : public PacketHeader
 {
 	int64_t UserUniqueId;
 	bool isReady;
 };
+
+// 특정 유저한테만 보냄? 방 전원한테 보냄?
+#pragma pack(push, 1)
+struct GAME_START_NOTIFY_PACKET : public PacketHeader
+{
+	int64_t key;
+};
+
+#pragma pack(push, 1)
+struct GAME_ENTER_REQUEST_PACKET : public PacketHeader
+{
+	int64_t key;
+};
+
+#pragma pack(push, 1)
+struct GAME_ENTER_RESPONSE_PACKET : public PacketHeader
+{
+	ERROR_CODE Result;
+};
+
+#pragma pack(push, 1)
+struct GAME_LAPSE_NOTIFY_PACKET : public PacketHeader
+{
+	int64_t LapsValue; // test
+};
+
+#pragma pack(push, 1)
+struct GAME_RESULT_NOTIFY_PACKET : public PacketHeader
+{
+	bool result;
+};
+
+#pragma pack(push, 1)
+struct GAME_CONTROL_REQUEST_PACKET : public PacketHeader
+{
+	int64_t key;
+	bool button;
+};
+
 #pragma pack(pop)

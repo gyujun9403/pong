@@ -84,9 +84,6 @@
     <ClInclude Include="ErrorCode.hpp">
       <Filter>Packet</Filter>
     </ClInclude>
-    <ClInclude Include="PacketManager.hpp">
-      <Filter>Packet</Filter>
-    </ClInclude>
     <ClInclude Include="UserManager.hpp">
       <Filter>User</Filter>
     </ClInclude>

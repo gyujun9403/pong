@@ -226,22 +226,15 @@ int Service::packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> Re
 	}
 	if (rtRoom.second->isAllUserReady())
 	{
+		std::string userList;
+
 		uint16_t i = 0;
-		std::vector<GameUserInfo> gameUsersInfo;
-		gameUsersInfo.resize(allUsersInRoom.size());
 		for (uint16_t elem : allUsersInRoom)
 		{
-
-			User* user = m_userManager->getUser(elem).second;
-			if (user != NULL)
-			{
-				GameUserInfo temp;
-				temp.init(elem, std::string("temp"));//, user->getUserId());
-				gameUsersInfo[i++] = temp;
-			}
+			userList += std::to_string(elem) + "-";
 		}
 		//m_matchingManager->pushToMatchqueue(std::move(gameUsersInfo));
-		m_matchingManager->pushToMatchqueue(gameUsersInfo);
+		m_matchingManager->pushToMatchQueue(userList);
 		// 모든 유저 레디 했으니, 유저 리스트를 넘김. 
 	}
 	//ROOM GAME START
@@ -282,6 +275,8 @@ void Service::serviceThread()
 			//승부 판정
 			//유저 방 탈출 함수 호출
 		}
+		redisProcessMatchingResultQueue();
+		redisProcessGameResultQueue();
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }
@@ -301,4 +296,57 @@ void Service::joinService()
 {
 	m_isServiceRun.store(false);
 	m_serviceThread.join();
+}
+
+void Service::redisProcessMatchingResultQueue()
+{
+	std::vector<std::string> rt = std::move(m_matchingManager->getFormMatchResultQueue());
+	std::vector<uint16_t> matchedUserList;
+	for (std::string& elem : rt)
+	{
+		std::stringstream ss(elem);
+		std::string token;
+
+		while (std::getline(ss, token, '-')) {
+			matchedUserList.push_back(std::stoi(token));
+			//int number = std::stoi(token);
+			// 여기에서 number를 처리합니다.
+			// ...
+		}
+		std::cout << "MatchingResult : " << elem << std::endl;
+		if (matchedUserList.size() < 2)
+		{
+			return;
+		}
+		// 지금도 다 방에 있고 레디 상태인지 확인.
+		std::pair<ERROR_CODE, Room*> before;
+		std::pair<ERROR_CODE, Room*> now;
+		before = m_roomManager->findRoomUserIn(matchedUserList[0]);
+		for (uint16_t clinetIndexElem : matchedUserList)
+		{
+			now = m_roomManager->findRoomUserIn(clinetIndexElem);
+			if (now.first != ERROR_CODE::NONE || now.second->isAllUserReady() == false || before != now)
+			{
+				return;
+			}
+			before = now;
+		}
+		for (uint16_t clinetIndexElem : matchedUserList)
+		{
+			GAME_START_NOTIFY_PACKET gameStartNtf;
+			gameStartNtf.PacketId = PACKET_ID::GAME_START_NOTIFY;
+			gameStartNtf.PacketLength = sizeof(GAME_START_NOTIFY_PACKET);
+			gameStartNtf.key = clinetIndexElem;
+			pushPacketToSendQueue(clinetIndexElem, reinterpret_cast<char*>(&gameStartNtf), sizeof(GAME_START_NOTIFY_PACKET));
+		}
+	}
+}
+
+void Service::redisProcessGameResultQueue()
+{
+	std::vector<std::string> rt = std::move(m_matchingManager->getFormGameResultQueue());
+	for (std::string& elem : rt)
+	{
+		std::cout << "GameResult : " << elem << std::endl;
+	}
 }

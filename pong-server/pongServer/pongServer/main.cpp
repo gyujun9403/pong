@@ -14,7 +14,7 @@ int main()
 	network.initServer();
 	network.upServer();
 	matchingManager.RedisInit();
-	matchingManager.runMatchThread();
+	matchingManager.runSendMatchingThread();
 	service.serviceInit();
 	service.runService();
 	std::cout << "아무 키나 누를 때까지 대기합니다" << std::endl;

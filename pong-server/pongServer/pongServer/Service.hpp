@@ -4,6 +4,7 @@
 #include <mutex>
 #include <map>
 #include <functional>
+#include <sstream>
 #include "UserManager.hpp"
 #include "RoomManager.h"
 #include "IOCPServer.h"
@@ -34,6 +35,8 @@ public:
 	void serviceInit();
 	void runService(); //서비스 스레드를 돌리는 역할.
 	void joinService();
+	void redisProcessMatchingResultQueue();
+	void redisProcessGameResultQueue();
 	int divergePackets(std::pair<int, std::vector<char> > packetSet);
 	int packetProcessLoginRequest(int clinetIndex, std::vector<char> ReqPacket);
 	int packetProcessRoomEnterRequest(int clinetIndex, std::vector<char> ReqPacket);

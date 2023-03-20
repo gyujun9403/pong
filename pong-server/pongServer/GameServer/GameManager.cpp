@@ -43,6 +43,7 @@ int GameManagerService::packetProcessGameControlRequest(int clinetIndex, std::ve
 	{
 		// 실패 결과 보냄.
 		//gameEnterRes.Result = ERROR_CODE::GAME_NOT_MATCHED_USER;
+		return false;
 	}
 	else
 	{
@@ -56,6 +57,7 @@ void GameManagerService::initGameManagerService()
 
 	m_games.resize(m_gameNum);
 	m_packetProcessMap.emplace(PACKET_ID::GAME_ENTER_REQ, std::bind(&GameManagerService::packetProcessGameEnterRequest, this, std::placeholders::_1, std::placeholders::_2));
+	m_packetProcessMap.emplace(PACKET_ID::GAME_CONTROL_REQ, std::bind(&GameManagerService::packetProcessGameControlRequest, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void GameManagerService::pushPacketToSendQueue(int clinetIndex, char* packet, size_t length)
@@ -68,7 +70,11 @@ void GameManagerService::pushPacketToSendQueue(int clinetIndex, char* packet, si
 int GameManagerService::divergePackets(std::pair<int, std::vector<char>> packetSet)
 {
 	PACKET_ID* packetId = reinterpret_cast<PACKET_ID*>(&packetSet.second[0] + sizeof(PacketHeader::PacketLength));
-
+	if (m_packetProcessMap.find(*packetId) == m_packetProcessMap.end())
+	{
+		std::cerr << "invalid packet form client." << std::endl;
+		return -1;
+	}
 	return m_packetProcessMap[*packetId](packetSet.first, packetSet.second);
 }
 
@@ -104,6 +110,7 @@ void GameManagerService::syncGames()
 						gameResultNtf.result = true;
 						pushPacketToSendQueue(it->second.ClinetIndex, reinterpret_cast<char*>(&gameResultNtf), gameResultNtf.PacketLength);
 					}
+					m_userInfoMap.erase(it);
 				}
 			}
 			for (uint16_t elem : rt.second)
@@ -116,9 +123,9 @@ void GameManagerService::syncGames()
 						gameResultNtf.result = false;
 						pushPacketToSendQueue(it->second.ClinetIndex, reinterpret_cast<char*>(&gameResultNtf), gameResultNtf.PacketLength);
 					}
+					m_userInfoMap.erase(it);
 				}
 			}
-			m_userInfoMap.clear();
 		}
 		else
 		{

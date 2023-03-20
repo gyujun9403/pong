@@ -20,6 +20,7 @@ ERROR_CODE Game::setUsersInGame(std::vector<uint16_t> users)
 void Game::clearGame()
 {
     m_userList.clear();
+    m_userEnterList.clear();
     m_gameStatus = GameStatus::EMPTY;
     winnerIndex = -1;
 }

@@ -23,11 +23,12 @@ private:
 	// 게임 클래스 추가해야함.
 public:
 	Room();
-	ERROR_CODE sendChatInRoom(uint16_t clientIndex, std::string message);
+	ERROR_CODE sendChatInRoom(uint16_t clientIndex, std::string message); // DEL
 	ERROR_CODE enterUser(uint16_t clientIndex);
 	ERROR_CODE leaveUser(uint16_t clientIndex);
 	bool setUserReady(uint16_t clientIndex, bool ready);
 	bool isAllUserReady();
+	void clearAllUserReady();
 	RoomStatus getRoomStatus();
 	void setRoomStatus(RoomStatus status);
 	std::vector<uint16_t> getAllUsers();

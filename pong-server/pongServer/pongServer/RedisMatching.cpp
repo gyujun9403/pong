@@ -4,11 +4,6 @@
 	#include <winsock2.h>
 #endif
 
-//RedisMatching::RedisMatching(uint16_t isunix, std::string ip, uint16_t port)
-//: m_isunix(isunix), m_IP(ip), m_PORT(port)
-//{
-//}
-
 std::vector<std::string> RedisMatching::getFromMatchQueue()
 {
 	std::unique_lock<std::mutex> matchQueueLock(m_matchingQueueMutex);

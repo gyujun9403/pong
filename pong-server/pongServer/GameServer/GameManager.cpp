@@ -1,7 +1,7 @@
 #include "GameManager.h"
 #include <cstdlib>
 
-GameManagerService::GameManagerService(IocpServer* network, RedisMatching* redis, uint16_t gameNum)
+GameManagerService::GameManagerService(IocpNetworkCore* network, RedisMatching* redis, uint16_t gameNum)
 	:m_network(network), m_redis(redis), m_gameNum(gameNum)
 {
 }
@@ -23,6 +23,7 @@ int GameManagerService::packetProcessGameEnterRequest(int clinetIndex, std::vect
 	else
 	{
 		it->second.ClinetIndex = clinetIndex;
+		m_ClinetUserMap.insert(std::move(std::make_pair(clinetIndex, it->first)));
 		// 만약 두명 다 등록 했다면 게임을 RUN상태로
 		it->second.gameIndex->enterUserInGame(it->first);
 		gameEnterRes.Result = ERROR_CODE::NONE;
@@ -110,6 +111,7 @@ void GameManagerService::syncGames()
 						gameResultNtf.result = true;
 						pushPacketToSendQueue(it->second.ClinetIndex, reinterpret_cast<char*>(&gameResultNtf), gameResultNtf.PacketLength);
 					}
+					m_ClinetUserMap.erase(it->second.ClinetIndex); // C
 					m_userInfoMap.erase(it);
 				}
 			}
@@ -123,6 +125,7 @@ void GameManagerService::syncGames()
 						gameResultNtf.result = false;
 						pushPacketToSendQueue(it->second.ClinetIndex, reinterpret_cast<char*>(&gameResultNtf), gameResultNtf.PacketLength);
 					}
+					m_ClinetUserMap.erase(it->second.ClinetIndex); // C
 					m_userInfoMap.erase(it);
 				}
 			}
@@ -168,9 +171,7 @@ Game* GameManagerService::setUserInGame(std::vector<uint16_t> userList)
 	for (uint16_t elem : userList)
 	{
 		UserInfo temp = { -1, rtGame };
-		m_userInfoMap.insert(std::make_pair(elem, std::move(temp)));
-		//m_userGameMap.insert(std::make_pair(elem, rtGame));
-		//m_userGameMap.insert(std::make_pair<uint16_t, Game*>(elem, rtGame));
+		m_userInfoMap.insert(std::move(std::make_pair(elem, std::move(temp))));
 	}
 }
 
@@ -190,9 +191,6 @@ void GameManagerService::parseAndSetUsers(std::vector<std::string> redisReqs)
 
 		while (std::getline(ss, token, '-')) {
 			matchingUserList.push_back(std::stoi(token));
-			//int number = std::stoi(token);
-			// 여기에서 number를 처리합니다.
-			// ...
 		}
 		setUserInGame(matchingUserList);
 		m_redis->pushToMatchResultQueue(elem);
@@ -209,15 +207,20 @@ void GameManagerService::gameServiceThread()
 		recvRt = m_network->getFromRecvQueue();
 		if (recvRt.first != -1)
 		{
-			//divergePackets(std::move(recvRt));
 			divergePackets(recvRt);
 		}
 		closeUserIndex = m_network->getCloseUser();
 		if (closeUserIndex != -1)
 		{
 			// 승부 판정 후 방 제거 함수 호출.
-			
-			std::cout << closeUserIndex << " user out" << std::endl;
+			std::map<int32_t, int32_t>::iterator it = m_ClinetUserMap.find(closeUserIndex);
+			if (it != m_ClinetUserMap.end())
+			{
+				auto p = m_userInfoMap.find(it->second);
+				p->second.gameIndex->leaveUserFromGame(p->first);
+				m_userInfoMap.erase(p->first);
+				m_ClinetUserMap.erase(closeUserIndex);
+			}
 		}
 		/*redisProcessMatchingResultQueue();
 		redisProcessGameResultQueue();*/

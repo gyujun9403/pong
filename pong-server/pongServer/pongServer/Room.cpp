@@ -82,6 +82,14 @@ bool Room::isAllUserReady()
 	return true;
 }
 
+void Room::clearAllUserReady()
+{
+	for (std::pair<uint16_t, bool>& elemUser : m_usersIndex)
+	{
+		elemUser.second = false;
+	}
+}
+
 RoomStatus Room::getRoomStatus()
 {
 	return m_roomStatus;

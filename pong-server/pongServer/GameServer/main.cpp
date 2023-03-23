@@ -1,10 +1,10 @@
 #include "RedisMatching.hpp"
-#include "IocpServer.h"
+#include "IocpNetworkCore.h"
 #include "GameManager.h"
 
 int main()
 {
-	IocpServer network(10, 4, 3335);
+	IocpNetworkCore network(10, 4, 3335);
 	RedisMatching matchingManager("127.0.0.1", 6379);
 	GameManagerService gameManagerService(&network, &matchingManager, 3);
 	network.initServer();
@@ -13,7 +13,7 @@ int main()
 	matchingManager.runRecvMatchingThread();
 	gameManagerService.initGameManagerService();
 	gameManagerService.runGameManagerService();
-	std::cout << "아무 키나 누를 때까지 대기합니다" << std::endl;
+	std::cout << "\n\033[32mGame sync server running.\033[0m \nPress any key to shut down the server." << std::endl;
 	std::string inputCmd;
 	std::getline(std::cin, inputCmd);
 	gameManagerService.joinGameManagerService();

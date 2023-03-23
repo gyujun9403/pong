@@ -135,7 +135,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GameUserInfo.cpp" />
-    <ClCompile Include="IOCPServer.cpp" />
+    <ClCompile Include="IocpNetworkCore.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pong.cpp" />
     <ClCompile Include="RecvedData.hpp" />
@@ -151,7 +151,7 @@
     <ClInclude Include="ErrorCode.hpp" />
     <ClInclude Include="GameUserInfo.h" />
     <ClInclude Include="IGame.h" />
-    <ClInclude Include="IOCPServer.h" />
+    <ClInclude Include="IocpNetworkCore.h" />
     <ClInclude Include="IServer.h" />
     <ClInclude Include="PacketsDefine.hpp" />
     <ClInclude Include="pong.h" />

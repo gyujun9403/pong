@@ -295,6 +295,7 @@ namespace csharp_test_client
             SendPacketQueue.Enqueue(dataSource.ToArray());
         }
 
+
         void clearRoomUserList()
         {
             listBoxRoomUserList.Items.Clear();

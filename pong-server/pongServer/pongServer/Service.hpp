@@ -7,7 +7,7 @@
 #include <sstream>
 #include "UserManager.hpp"
 #include "RoomManager.h"
-#include "IOCPServer.h"
+#include "IocpNetworkCore.h"
 #include "PacketsDefine.hpp"
 #include "RedisMatching.hpp"
 
@@ -21,7 +21,7 @@ class Service
 	typedef std::function<int(int, std::vector<char>)> FuncType;
 private:
 	std::thread m_serviceThread;
-	IocpServer* m_network;
+	IocpNetworkCore* m_network;
 	UserManager* m_userManager;
 	RoomManager* m_roomManager;
 	RedisMatching* m_matchingManager;
@@ -31,7 +31,7 @@ private:
 	void pushPacketToSendQueue(int clinetIndex, char* packet, size_t length);
 	ROOM_USER_LIST_NOTIFY_PACKET makeUserListPacket(std::vector<uint16_t> userInRoomList);
 public:
-	Service(IocpServer* network, UserManager* userManager, RoomManager* roomManager, RedisMatching* matchingManager);
+	Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, RedisMatching* matchingManager);
 	void serviceInit();
 	void runService(); //서비스 스레드를 돌리는 역할.
 	void joinService();

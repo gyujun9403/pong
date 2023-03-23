@@ -1,7 +1,7 @@
-#include "IOCPServer.h"
+#include "IocpNetworkCore.h"
 #include "PacketsDefine.hpp"
 
-IocpServer::IocpServer(const uint32_t clientNum, const uint16_t workerThreadNum, const uint16_t port)
+IocpNetworkCore::IocpNetworkCore(const uint32_t clientNum, const uint16_t workerThreadNum, const uint16_t port)
 : m_listenSocket(INVALID_SOCKET), m_workerThreadNum(workerThreadNum)
 	, m_clientNum(clientNum), m_isWorkersRun(true), m_isAccpterRun(true)
 {
@@ -10,7 +10,7 @@ IocpServer::IocpServer(const uint32_t clientNum, const uint16_t workerThreadNum,
 	m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 }
 
-bool IocpServer::initServer()
+bool IocpNetworkCore::initServer()
 {
 	try
 	{
@@ -24,7 +24,7 @@ bool IocpServer::initServer()
 	return true;
 }
 
-bool IocpServer::upServer()
+bool IocpNetworkCore::upServer()
 {
 	try
 	{
@@ -41,29 +41,23 @@ bool IocpServer::upServer()
 	return true;
 }
 
-void IocpServer::downServer()
+void IocpNetworkCore::downServer()
 {
-	//순서? iocp핸들부터 닫아야하나? 스레드들이 안끝나는데
 	this->closeHandle();
 	this->closeSocket();
 	this->joinThreads();
 }
 
-std::string IocpServer::makeErrorStr(const std::string errFunc)
+std::string IocpNetworkCore::makeErrorStr(const std::string errFunc)
 {
 	std::string rt = "Init Error(" + errFunc + ", Erro code : " + std::to_string(WSAGetLastError()) + ")";
 	return rt;
 }
 
-void IocpServer::init()
+void IocpNetworkCore::init()
 {
 	int rt;
 	WSADATA dummyWsaData;
-	/*unsigned m_serverHwCoreNum = std::thread::hardware_concurrency();
-	if (m_serverHwCoreNum == 0)
-	{
-		throw "`std::thread::hardware_concurrency()` error. Can't detect system cores.";
-	}*/
 	rt = WSAStartup(MAKEWORD(2, 2), &dummyWsaData); //https://learn.microsoft.com/ko-kr/windows/win32/api/winsock/nf-winsock-wsastartup
 	if (rt != 0)
 	{
@@ -78,7 +72,7 @@ void IocpServer::init()
 	std::cout << "init Success" << std::endl;
 }
 
-void IocpServer::bind()
+void IocpNetworkCore::bind()
 {
 	if (::bind(m_listenSocket, (SOCKADDR*)&m_serverAddr, sizeof(m_serverAddr)) != 0)
 	{
@@ -87,9 +81,8 @@ void IocpServer::bind()
 	std::cout << "bind Success" << std::endl;
 }
 
-void IocpServer::listen()
+void IocpNetworkCore::listen()
 {
-	// SOMAXCONN??
 	if (::listen(m_listenSocket, SOMAXCONN) != 0)
 	{
 		throw makeErrorStr("::listen(...)");
@@ -97,7 +90,7 @@ void IocpServer::listen()
 	std::cout << "listen Success" << std::endl;
 }
 
-void IocpServer::iocpInit()
+void IocpNetworkCore::iocpInit()
 {
 	for (uint16_t i = 0; i < m_clientNum; i++)
 	{
@@ -113,11 +106,8 @@ void IocpServer::iocpInit()
 }
 
 
-void IocpServer::iocpRun()
+void IocpNetworkCore::iocpRun()
 {
-	// in c++ 11
-
-	// worker threads run
 	for (size_t i = 0; i < m_workerThreadNum; i++)
 	{
 		m_workers.emplace_back
@@ -128,7 +118,6 @@ void IocpServer::iocpRun()
 			}
 		);
 	}
-	// accpet thread run
 	m_accecpThread = std::thread
 	(
 		[this]()
@@ -139,7 +128,7 @@ void IocpServer::iocpRun()
 	std::cout << "IOCP running..." << std::endl;
 }
 
-void IocpServer::joinThreads()
+void IocpNetworkCore::joinThreads()
 {
 	m_isAccpterRun.store(false);
 	m_isWorkersRun.store(false);
@@ -152,24 +141,22 @@ void IocpServer::joinThreads()
 }
 
 
-void IocpServer::closeHandle()
+void IocpNetworkCore::closeHandle()
 {
 	CloseHandle(m_iocpHandle);
 	std::cout << "handle closed" << std::endl;
 }
 
-void IocpServer::closeSocket()
+void IocpNetworkCore::closeSocket()
 {
 	closesocket(m_listenSocket);
 	std::cout << "soecket closed" << std::endl;
 }
 
-void IocpServer::recv(ClientInfo& clientInfo)
+void IocpNetworkCore::recv(ClientInfo& clientInfo)
 {
 	DWORD dumyRecvByte = 0;
 	DWORD dumyFlags = 0;
-	/*clientInfo.recvOverlapped.wsaBuf.buf = clientInfo.recvBuf;
-	clientInfo.recvOverlapped.wsaBuf.len = SOCKBUFFERSIZE;*/
 	if (clientInfo.recvedLen >= SOCKBUFFERSIZE)
 	{
 		return;
@@ -180,7 +167,6 @@ void IocpServer::recv(ClientInfo& clientInfo)
 	int rtRecv = WSARecv
 	(
 		clientInfo.clientSocket,
-		//clientInfo.recvOverlapped.wsaBuf.buf,
 		&clientInfo.recvOverlapped.wsaBuf,
 		1, 
 		&dumyRecvByte,
@@ -199,22 +185,19 @@ void IocpServer::recv(ClientInfo& clientInfo)
 
 
 
-void IocpServer::pushToSendQueue(uint16_t clientIndex, std::vector<char> packet)
+void IocpNetworkCore::pushToSendQueue(uint16_t clientIndex, std::vector<char> packet)
 {
 	// lock을 클라별로 가지고 있음.
 	
 	std::lock_guard<std::mutex> pushQueueLock(m_clients[clientIndex].sendQueueMutex);
-	//m_clients[clientIndex].sendQueue.push(std::move(packet));
 	m_clients[clientIndex].sendQueue.push(packet);
-	//std::vector<char>& forDebugVec = m_clients[clientIndex].sendQueue.front();
-	//packet.clear();
 	if (m_clients[clientIndex].sendQueue.size() == 1)
 	{
 		this->send(m_clients[clientIndex]);
 	}
 }
 
-std::pair<int, std::vector<char> > IocpServer::getFromRecvQueue()
+std::pair<int, std::vector<char> > IocpNetworkCore::getFromRecvQueue()
 {
 	std::pair<int, std::vector<char> > rt;
 	rt.first = -1;
@@ -227,10 +210,9 @@ std::pair<int, std::vector<char> > IocpServer::getFromRecvQueue()
 	return rt;
 }
 
-int32_t IocpServer::getCloseUser()
+int32_t IocpNetworkCore::getCloseUser()
 {
 	int32_t closeUserIndex = -1;
-	//uint32_t closeUserIndex = 1;
 	std::lock_guard<std::mutex> closeUserLock(m_closedUserIndexQueueMutex);
 	if (m_closeUserIndexQueue.size() != 0)
 	{
@@ -240,7 +222,7 @@ int32_t IocpServer::getCloseUser()
 	return closeUserIndex;
 }
 
-void IocpServer::send(ClientInfo& clientInfo)
+void IocpNetworkCore::send(ClientInfo& clientInfo)
 {
 	DWORD dumyRecvByte = 0;
 	DWORD dumyFlags = 0;
@@ -248,16 +230,9 @@ void IocpServer::send(ClientInfo& clientInfo)
 	{
 		return;
 	}
-	/*size_t strLen = (clientInfo.sendQueue.front().size() > SOCKBUFFERSIZE) 
-		? (SOCKBUFFERSIZE) : (clientInfo.sendQueue.front().size());*/
-	//size_t strLen = (clientInfo.sendQueue.front().size() > 2)
-	//	? (2) : (clientInfo.sendQueue.front().size());
 	
 	size_t buffSize = clientInfo.sendQueue.front().size();
 	memcpy_s(clientInfo.sendBuf, SOCKBUFFERSIZE, &clientInfo.sendQueue.front()[0], buffSize);
-	//clientInfo.sendOverlapped.wsaBuf.buf = &clientInfo.sendQueue.front()[0];
-	//clientInfo.sendOverlapped.wsaBuf.len = clientInfo.sendQueue.front().size();
-	//clientInfo.sendOverlapped.wsaBuf.len = strLen;
 	clientInfo.sendOverlapped.wsaBuf.buf = clientInfo.sendBuf;
 	clientInfo.sendOverlapped.wsaBuf.len = buffSize;
 	clientInfo.sendOverlapped.ioOperation = IOOperation::SEND;
@@ -281,15 +256,13 @@ void IocpServer::send(ClientInfo& clientInfo)
 	}
 }
 
-// Wirte service logic here
-void IocpServer::acceptThreadFunc()
+void IocpNetworkCore::acceptThreadFunc()
 {
 	sockaddr tempSockaddr;
 	int sockaddrSize = sizeof(tempSockaddr);
 	HANDLE rtHandle;
 	while (m_isAccpterRun.load())
 	{
-		//ClientInfo* emptyClientInfo = m_userManager->getEmtyUserForAccept();
 		ClientInfo* emptyClientInfo = NULL;
 		for (ClientInfo& clientElement : m_clients)
 		{
@@ -301,7 +274,6 @@ void IocpServer::acceptThreadFunc()
 		}
 		if (emptyClientInfo == NULL)
 		{
-			// 예외처리 필요
 			std::cout << makeErrorStr("emptyClientInfo") << std::endl;
 			return;
 		}
@@ -314,7 +286,6 @@ void IocpServer::acceptThreadFunc()
 			return;
 		}
 
-		// IOCP에 accept한 클라이언트 등록
 		rtHandle = CreateIoCompletionPort
 		(
 			reinterpret_cast<HANDLE>(emptyClientInfo->clientSocket),
@@ -322,33 +293,27 @@ void IocpServer::acceptThreadFunc()
 			reinterpret_cast<ULONG_PTR>(emptyClientInfo),
 			0
 		);
-		if (rtHandle != m_iocpHandle)// rtHandle == NULL인 경우는 알아서 확인될듯?
+		if (rtHandle != m_iocpHandle)
 		{
 			std::cout << makeErrorStr("CreateIoCompletionPort?") << std::endl;
 			return;
 		}
-		std::cout << "accepted" << std::endl;
-		// recv등록.
-		// 접속 성공 패킷 sendqueue에 담기.
-		
+		std::cout << emptyClientInfo->index << " accepted" << std::endl;
 		recv(*emptyClientInfo);
-		std::cout << "recv " << std::endl;
 	}
 	std::cout << "accept stop" << std::endl;
 }
 
-void IocpServer::closeClient(ClientInfo& clientInfo, bool forceClose)
+void IocpNetworkCore::closeClient(ClientInfo& clientInfo, bool forceClose)
 {
-	// 유저 연결이 끊긴 경우....
 	uint32_t clientIndex = clientInfo.index;
 	struct linger ligerOpt;
 	if (forceClose == true)
 	{
-		ligerOpt = { 1, 0 }; // 강제 종료시, linger옵션 활성화
+		ligerOpt = { 1, 0 };
 	}
 	else
 	{
-		//ligerOpt = { 1, 0 };
 		ligerOpt = { 0, 0 };
 	}
 	shutdown(clientInfo.clientSocket, SD_BOTH);
@@ -361,16 +326,15 @@ void IocpServer::closeClient(ClientInfo& clientInfo, bool forceClose)
 		sizeof(ligerOpt)
 	);
 	closesocket(clientInfo.clientSocket);
+	std::cout << clientInfo.index << " clinet out" << std::endl;
 	clientInfo.clearClientInfo();
-	//clientInfo.clientSocket = INVALID_SOCKET;
-	std::cout << clientIndex << "out" << std::endl;
 	std::lock_guard<std::mutex> closeUserLock(m_closedUserIndexQueueMutex);
 	m_closeUserIndexQueue.push(clientInfo.index);
 }
 
 
 
-void IocpServer::workerThreadFunc()
+void IocpNetworkCore::workerThreadFunc()
 {
 	bool rt;
 	DWORD transferredByte;
@@ -380,7 +344,6 @@ void IocpServer::workerThreadFunc()
 	uint16_t* packetSizePtr;
 	while (m_isWorkersRun.load())
 	{
-		//Sleep(5000);
 		rt = GetQueuedCompletionStatus
 		(
 			m_iocpHandle, 
@@ -400,11 +363,12 @@ void IocpServer::workerThreadFunc()
 		}
 		if (rt == false || (rt == true && transferredByte == 0))
 		{
-			//while
-			//clientInfoPtr->m_isDisconnecting.compare_exchange_strong(true)
-			closeClient(*clientInfoPtr, false);
+			if (clientInfoPtr->recvBufMutex.try_lock() == true)
+			{
+				closeClient(*clientInfoPtr, false);
+				clientInfoPtr->recvBufMutex.unlock();
+			}
 			continue;
-			// 클라 접속 종료 -> 소캣 닫기
 		}
 
 		exOverlappedPtr = reinterpret_cast<ExOverlapped*>(overlappedResultPtr);
@@ -413,11 +377,9 @@ void IocpServer::workerThreadFunc()
 			char* bufferStart = clientInfoPtr->recvBuf;
 			uint32_t nowLen = transferredByte;
 			uint32_t& beforeLen = clientInfoPtr->recvedLen;
-			// lock걸기? -> recv의 경우 다시 걸기 전까진 걸릴 이유 없으니 lock필요 없을듯
 			while (nowLen != 0)
 			{
 				packetSizePtr = reinterpret_cast<uint16_t*>(bufferStart);
-				// 덜 받은 경우, 이미 받은 길이를 갱신하여 탈출 
 				if ( nowLen + beforeLen < sizeof(PacketHeader::PacketLength)
 					|| *packetSizePtr > nowLen + beforeLen)
 				{
@@ -426,7 +388,6 @@ void IocpServer::workerThreadFunc()
 				}
 				else
 				{
-					// 다 받은 경우 덜받은 길이 초기화 하고, recvQueue에 넣고, bufferStart갱신.
 					std::vector<char> temp(*packetSizePtr);
 					std::move(bufferStart, bufferStart + *packetSizePtr, temp.begin());
 					bufferStart += *packetSizePtr;
@@ -440,28 +401,14 @@ void IocpServer::workerThreadFunc()
 		}
 		else if (exOverlappedPtr->ioOperation == IOOperation::SEND)
 		{
-			/*  Lock을 건다
-			*	1. send시 전송한 길이를 확인한다
-					1. 0번째 원소의 크기와 같으면 그 원소를 잘 요청한것. queue에서 삭제한다.
-					2. 0번째 원소 크기보다 작으면 덜 보낸 것 이므로, 데이터 갱신만 한다.
-					3. 만약 원소가 없다면 로직이 이상한 것 임. 삭제를 worker에서만 해줘야함.
-				2. queue에 남은 원소가 있다면(다 보냈던, 덜 보냈던) send를 걸어버린다.
-			*/
 			std::lock_guard<std::mutex> sendGuard(clientInfoPtr->sendQueueMutex);
-			if (clientInfoPtr->sendQueue.size() == 0)
+			if (transferredByte == clientInfoPtr->sendQueue.front().size())// 한번에 다 보낸 경우
 			{
-				throw "wtf?";
-			}
-			else if (transferredByte == clientInfoPtr->sendQueue.front().size())
-			{
-				// 한번에 다 보낸 경우
 				clientInfoPtr->sendQueue.pop();
 			}
-			else if (transferredByte < clientInfoPtr->sendQueue.front().size())
+			else if (transferredByte < clientInfoPtr->sendQueue.front().size())// 덜 보낸 경우
 			{
-				// 덜 보낸 경우
 				std::vector<char>& tempVec = clientInfoPtr->sendQueue.front();
-				//tempVec.assign(tempVec.begin() + transferredByte, tempVec.end());
 				std::move(tempVec.begin() + transferredByte, tempVec.end(), tempVec.begin());
 				tempVec.resize(tempVec.size() - transferredByte);
 			}

@@ -65,21 +65,16 @@ namespace csharp_test_client
             GameNetworkReadThread.Start();
             GameNetworkSendThread = new System.Threading.Thread(this.NetworkSendProcess);
             GameNetworkSendThread.Start();
+            System.Threading.Thread.Sleep(1);
 
             IsBackGroundProcessRunning = true;
-            //dispatcherUITimer = new System.Windows.Threading.DispatcherTimer();
-            //dispatcherUITimer.Tick += new EventHandler(BackGroundProcess);
-            //dispatcherUITimer.Interval = new TimeSpan(0, 0, 0, 0, 100);
-            //dispatcherUITimer.Start();
-            var requestPkt = new GameEnterReqPacket();
-            requestPkt.setKey(key);
-            PostSendPacket(PACKET_ID.GAME_ENTER_REQUEST, requestPkt.ToBytes());
-            //DevLog.Write($"방 입장 요청:  {textBoxRoomNumber.Text} 번");
-
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += new DoWorkEventHandler(worker_DoWork);
             worker.RunWorkerAsync();
-            //btnDisconnect.Enabled = false;
+
+            var requestPkt = new GameEnterReqPacket();
+            requestPkt.setKey(key);
+            PostSendPacket(PACKET_ID.GAME_ENTER_REQUEST, requestPkt.ToBytes());
 
             SetPacketHandler();
             DevLog.Write("프로그램 시작 !!!", LOG_LEVEL.INFO);
@@ -303,15 +298,13 @@ namespace csharp_test_client
             var responsePkt = new GameLapseNtfPacket();
             responsePkt.FromBytes(bodyData);
 
-            //AddRoomChatMessageList(responsePkt.UserID, responsePkt.Message);
-            //this.Close();
-            this.notifyDataList.Invoke(new MethodInvoker(
-                        delegate { this.notifyDataList.ClearSelected(); }
-                        ));
-            this.notifyDataList.Invoke(new MethodInvoker(
-                        delegate { this.notifyDataList.Text = Convert.ToString(responsePkt.LapsValue); }
-                        ));
-            
+            this.ServerText.Invoke
+                (
+                    new MethodInvoker
+                    (
+                        delegate { this.ServerText.Text = "Server syas: " + Convert.ToString(responsePkt.LapsValue); }
+                    )
+                );
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)

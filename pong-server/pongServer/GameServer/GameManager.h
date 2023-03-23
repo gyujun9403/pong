@@ -8,7 +8,7 @@
 #include "Game.h"
 #include "PacketsDefine.hpp"
 #include "RedisMatching.hpp"
-#include "IOCPServer.h"
+#include "IocpNetworkCore.h"
 
 #pragma pack(push, 1)
 struct UserInfo
@@ -21,25 +21,22 @@ class GameManagerService
 {
 private:
 	const uint16_t m_gameNum;
-	IocpServer* m_network;
+	IocpNetworkCore* m_network;
 	RedisMatching* m_redis;
 	typedef std::function<int(int, std::vector<char>)> FuncType;
 	std::vector<Game> m_games;
-	//std::map<uint16_t, Game*> m_userGameMap; // ->> 
 	std::map<int32_t, UserInfo > m_userInfoMap;
+	std::map<int32_t, int32_t > m_ClinetUserMap;
 	std::map<PACKET_ID, FuncType> m_packetProcessMap;
-	// 스레드생성 -> 게임돌리는 스레드, 게임 돌리면서 
 	std::atomic<bool> m_isGameRun = true;
 	std::thread m_gameRunThread;
-	void checkNewGameReq();
-	void sendGameResult();
 	int divergePackets(std::pair<int, std::vector<char> > packetSet);
 	void parseAndSetUsers(std::vector<std::string> redisReqs);
 	void syncGames();
 	Game* getEmptyGame();
 	Game* setUserInGame(std::vector<uint16_t> userList);
 public:
-	GameManagerService(IocpServer* network, RedisMatching* redis, uint16_t gameNum);
+	GameManagerService(IocpNetworkCore* network, RedisMatching* redis, uint16_t gameNum);
 	void pushPacketToSendQueue(int clinetIndex, char* packet, size_t length);
 	void initGameManagerService();
 	void gameServiceThread();

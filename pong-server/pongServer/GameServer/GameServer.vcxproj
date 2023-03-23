@@ -135,7 +135,7 @@
   <ItemGroup>
     <ClCompile Include="..\pongServer\ClientInfo.cpp" />
     <ClCompile Include="..\pongServer\GameUserInfo.cpp" />
-    <ClCompile Include="..\pongServer\IOCPServer.cpp" />
+    <ClCompile Include="..\pongServer\IocpNetworkCore.cpp" />
     <ClCompile Include="..\pongServer\RedisMatching.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameManager.cpp" />
@@ -149,7 +149,7 @@
   <ItemGroup>
     <ClInclude Include="..\pongServer\ClientInfo.h" />
     <ClInclude Include="..\pongServer\GameUserInfo.h" />
-    <ClInclude Include="..\pongServer\IOCPServer.h" />
+    <ClInclude Include="..\pongServer\IocpNetworkCore.h" />
     <ClInclude Include="..\pongServer\IServer.h" />
     <ClInclude Include="..\pongServer\RedisMatching.hpp" />
     <ClInclude Include="Game.h" />

@@ -22,19 +22,9 @@
 
         private void InitializeComponent()
         {
-            this.notifyDataList = new System.Windows.Forms.ListBox();
             this.WinButton = new System.Windows.Forms.Button();
+            this.ServerText = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
-            // 
-            // notifyDataList
-            // 
-            this.notifyDataList.FormattingEnabled = true;
-            this.notifyDataList.ItemHeight = 12;
-            this.notifyDataList.Location = new System.Drawing.Point(83, 30);
-            this.notifyDataList.Name = "notifyDataList";
-            this.notifyDataList.Size = new System.Drawing.Size(120, 28);
-            this.notifyDataList.TabIndex = 0;
-            this.notifyDataList.SelectedIndexChanged += new System.EventHandler(this.notifyDataList_selectDataexcange);
             // 
             // WinButton
             // 
@@ -46,19 +36,26 @@
             this.WinButton.UseVisualStyleBackColor = true;
             this.WinButton.Click += new System.EventHandler(this.WinButton_Click);
             // 
+            // ServerText
+            // 
+            this.ServerText.Location = new System.Drawing.Point(76, 24);
+            this.ServerText.Name = "ServerText";
+            this.ServerText.Size = new System.Drawing.Size(134, 25);
+            this.ServerText.TabIndex = 2;
+            // 
             // GameForm
             // 
             this.ClientSize = new System.Drawing.Size(284, 261);
+            this.Controls.Add(this.ServerText);
             this.Controls.Add(this.WinButton);
-            this.Controls.Add(this.notifyDataList);
             this.Name = "GameForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GameForm_FormClosing);
             this.Load += new System.EventHandler(this.GameForm_Load);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
-
-        private System.Windows.Forms.ListBox notifyDataList;
         private System.Windows.Forms.Button WinButton;
+        private System.Windows.Forms.TextBox ServerText;
     }
 }

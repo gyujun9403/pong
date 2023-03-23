@@ -54,7 +54,22 @@ std::pair<std::vector<uint16_t>, std::vector<uint16_t> > Game::syncGame()
 {
     std::vector<uint16_t> winner;
     std::vector<uint16_t> loser;
-    if (winnerIndex != -1)
+    if (losserIndex != -1)
+    {
+        for (uint16_t userElem : m_userList)
+        {
+            if (userElem != losserIndex)
+            {
+                winner.push_back(userElem);
+            }
+            else
+            {
+                loser.push_back(userElem);
+            }
+        }
+        //clearGame();
+    }
+    else if (winnerIndex != -1)
     {
         for (uint16_t userElem : m_userList)
         {
@@ -67,6 +82,7 @@ std::pair<std::vector<uint16_t>, std::vector<uint16_t> > Game::syncGame()
                 loser.push_back(userElem);
             }
         }
+        //clearGame();
     }
     return std::make_pair<std::vector<uint16_t>, std::vector<uint16_t> >(std::move(winner), std::move(loser));
 }
@@ -93,6 +109,19 @@ GameStatus Game::enterUserInGame(uint16_t user)
     ))
     {
         m_gameStatus = GameStatus::RUNNING;
+    }
+    return m_gameStatus;
+}
+
+GameStatus Game::leaveUserFromGame(uint16_t user)
+{
+    std::vector<uint16_t>::iterator it = std::find(m_userList.begin(), m_userList.end(), user);
+    if (it != m_userList.end())
+    {
+        uint16_t index = std::distance(m_userList.begin(), it);
+        //m_userList.erase(it); 일단 유저는 냅두기. 
+        m_userEnterList.at(index) = false;
+        losserIndex = index;
     }
     return m_gameStatus;
 }

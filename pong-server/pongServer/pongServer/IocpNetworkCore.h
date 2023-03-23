@@ -13,7 +13,7 @@
 #include "ClientInfo.h"
 //#include "UserManager.hpp"
 
-class IocpServer : public IServer
+class IocpNetworkCore : public IServer
 {
 private:
 	SOCKET m_listenSocket; // 무슨역할?
@@ -37,11 +37,11 @@ private:
 	std::queue<int> m_closeUserIndexQueue;
 	void closeClient(ClientInfo& clientInfo, bool forceClose);
 public:
-	IocpServer() = delete;
+	IocpNetworkCore() = delete;
 	// 서버 유저수, 워커스레드 개수
-	IocpServer(uint32_t clientNum, uint16_t workerThreadNum, uint16_t port);
+	IocpNetworkCore(uint32_t clientNum, uint16_t workerThreadNum, uint16_t port);
 	//IocpServer(UserManager* userManager, const uint16_t workerThreadNum, const uint16_t port);
-	~IocpServer() {}
+	~IocpNetworkCore() {}
 	//void pushToSendQueue(uint16_t clientIndex, std::string str);
 	void pushToSendQueue(uint16_t clientIndex, std::vector<char> packet);
 	std::pair<int, std::vector<char> > getFromRecvQueue();

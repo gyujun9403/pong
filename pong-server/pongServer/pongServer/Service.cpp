@@ -2,7 +2,7 @@
 #include "PacketsDefine.hpp"
 #include "ErrorCode.hpp"
 
-Service::Service(IocpServer* network, UserManager* userManager, RoomManager* roomManager, RedisMatching* matchingManager)
+Service::Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, RedisMatching* matchingManager)
 :m_network(network), m_userManager(userManager), m_isServiceRun(true), m_roomManager(roomManager), m_matchingManager(matchingManager)
 {
 }
@@ -18,7 +18,6 @@ void Service::pushPacketToSendQueue(int clinetIndex, char* packet, size_t length
 {
 	std::vector<char> res(packet, packet + length);
 	res.resize(length);
-	//m_network->pushToSendQueue(clinetIndex, std::move(res));
 	m_network->pushToSendQueue(clinetIndex, res);
 }
 
@@ -27,8 +26,6 @@ int Service::packetProcessLoginRequest(int clinetIndex, std::vector<char> ReqPac
 	LOGIN_REQUEST_PACKET loginReq;
 	LOGIN_RESPONSE_PACKET loginRes;
 	std::move(ReqPacket.begin(), ReqPacket.end(), (char*)&loginReq);
-	std::cout << loginReq.UserID << ", " << loginReq.UserPW << std::endl;
-	// 같은 id의 유저가 있는지 확인
 	loginRes.PacketId = PACKET_ID::LOGIN_RESPONSE;
 	loginRes.PacketLength = sizeof(LOGIN_RESPONSE_PACKET);
 	std::pair<ERROR_CODE, User*> rt = m_userManager->getUser(clinetIndex);
@@ -86,7 +83,6 @@ ROOM_USER_LIST_NOTIFY_PACKET Service::makeUserListPacket(std::vector<uint16_t> u
 
 int Service::packetProcessRoomEnterRequest(int clinetIndex, std::vector<char> ReqPacket)
 {
-	// 로그인 확인
 	ROOM_ENTER_REQUEST_PACKET roomEnterReq;
 	ROOM_ENTER_RESPONSE_PACKET roomEnterRes;
 	roomEnterRes.PacketId = PACKET_ID::ROOM_ENTER_RESPONSE;
@@ -94,12 +90,11 @@ int Service::packetProcessRoomEnterRequest(int clinetIndex, std::vector<char> Re
 	std::pair<ERROR_CODE, User*> rtUser = m_userManager->getUser(clinetIndex);
 	if (rtUser.first != ERROR_CODE::NONE)
 	{
-		roomEnterRes.Result = rtUser.first; // 잠깐 이거 지역변수인데? -> 어짜피 스택구조상 안없어지니 생관없을듯.
+		roomEnterRes.Result = rtUser.first;
 		pushPacketToSendQueue(clinetIndex, reinterpret_cast<char*>(&roomEnterRes), sizeof(ROOM_ENTER_RESPONSE_PACKET));
 		return -1;
 	}
 	std::move(ReqPacket.begin(), ReqPacket.end(), (char*)&roomEnterReq);
-	// 방 입장 가능 확인
 	std::pair<ERROR_CODE, Room*> rtRoom = m_roomManager->addUserInRoom(clinetIndex, roomEnterReq.RoomNumber);
 	if (rtRoom.first != ERROR_CODE::NONE)
 	{
@@ -183,8 +178,6 @@ int Service::packetProcessRoomChatRequest(int clinetIndex, std::vector<char> Req
 	{
 		pushPacketToSendQueue(clinetIndexElem, reinterpret_cast<char*>(&rootChatNtf), sizeof(ROOM_CHAT_NOTIFY_PACKET));
 	}
-	// ROOM_CHAT_RESPONSE_PACKET을 받음
-	// 이 후 방의 전원 보두 ROOM_CHAT_NOTIFY_PACKET을 받음.
 	return 0;
 }
 
@@ -235,6 +228,7 @@ int Service::packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> Re
 		}
 		//m_matchingManager->pushToMatchqueue(std::move(gameUsersInfo));
 		m_matchingManager->pushToMatchQueue(userList);
+		rtRoom.second->clearAllUserReady();
 		// 모든 유저 레디 했으니, 유저 리스트를 넘김. 
 	}
 	//ROOM GAME START
@@ -267,13 +261,8 @@ void Service::serviceThread()
 		closeUserIndex = m_network->getCloseUser();
 		if (closeUserIndex != -1)
 		{
-			//유저 방에서 제거
-			//유저 풀에서 제거
-			std::cout << closeUserIndex << " user out" << std::endl;
 			m_roomManager->leaveUserInRoom(closeUserIndex);
 			m_userManager->deleteUser(closeUserIndex);
-			//승부 판정
-			//유저 방 탈출 함수 호출
 		}
 		redisProcessMatchingResultQueue();
 		redisProcessGameResultQueue();
@@ -309,28 +298,24 @@ void Service::redisProcessMatchingResultQueue()
 
 		while (std::getline(ss, token, '-')) {
 			matchedUserList.push_back(std::stoi(token));
-			//int number = std::stoi(token);
-			// 여기에서 number를 처리합니다.
-			// ...
 		}
-		std::cout << "MatchingResult : " << elem << std::endl;
 		if (matchedUserList.size() < 2)
 		{
 			return;
 		}
 		// 지금도 다 방에 있고 레디 상태인지 확인.
-		std::pair<ERROR_CODE, Room*> before;
-		std::pair<ERROR_CODE, Room*> now;
-		before = m_roomManager->findRoomUserIn(matchedUserList[0]);
-		for (uint16_t clinetIndexElem : matchedUserList)
-		{
-			now = m_roomManager->findRoomUserIn(clinetIndexElem);
-			if (now.first != ERROR_CODE::NONE || now.second->isAllUserReady() == false || before != now)
-			{
-				return;
-			}
-			before = now;
-		}
+		//std::pair<ERROR_CODE, Room*> before;
+		//std::pair<ERROR_CODE, Room*> now;
+		//before = m_roomManager->findRoomUserIn(matchedUserList[0]);
+		//for (uint16_t clinetIndexElem : matchedUserList)
+		//{
+		//	now = m_roomManager->findRoomUserIn(clinetIndexElem);
+		//	if (now.first != ERROR_CODE::NONE || now.second->isAllUserReady() == false || before != now)
+		//	{
+		//		return;
+		//	}
+		//	before = now;
+		//}
 		for (uint16_t clinetIndexElem : matchedUserList)
 		{
 			GAME_START_NOTIFY_PACKET gameStartNtf;
@@ -344,9 +329,10 @@ void Service::redisProcessMatchingResultQueue()
 
 void Service::redisProcessGameResultQueue()
 {
-	std::vector<std::string> rt = std::move(m_matchingManager->getFormGameResultQueue());
-	for (std::string& elem : rt)
-	{
-		std::cout << "GameResult : " << elem << std::endl;
-	}
+	// TODO
+	//std::vector<std::string> rt = std::move(m_matchingManager->getFormGameResultQueue());
+	//for (std::string& elem : rt)
+	//{
+	//	std::cout << "GameResult : " << elem << std::endl;
+	//}
 }

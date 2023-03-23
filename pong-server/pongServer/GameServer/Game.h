@@ -18,7 +18,7 @@ private:
 	std::vector<bool> m_userEnterList;
 	// 게임 방식에 따라 바꿔야함.
 	int32_t winnerIndex = -1;
-
+	int32_t losserIndex = -1;
 public:
 	Game() :m_gameStatus(GameStatus::EMPTY) {}
 	Game(const Game& other)
@@ -30,6 +30,7 @@ public:
 	GameStatus getGameStatus();
 	ERROR_CODE setUsersInGame(std::vector<uint16_t> users);
 	GameStatus enterUserInGame(uint16_t user);
+	GameStatus leaveUserFromGame(uint16_t user);
 	void clearGame();
 	std::vector<uint16_t> getAllUsers();
 	//ERROR_CODE finishGame();

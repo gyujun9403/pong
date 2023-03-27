@@ -95,24 +95,24 @@ namespace csharp_test_client
             syncReadyBtn();
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(textSendText.Text))
-            {
-                MessageBox.Show("보낼 텍스트를 입력하세요");
-                return;
-            }
+        //private void button1_Click(object sender, EventArgs e)
+        //{
+        //    if (string.IsNullOrEmpty(textSendText.Text))
+        //    {
+        //        MessageBox.Show("보낼 텍스트를 입력하세요");
+        //        return;
+        //    }
 
-            var body = Encoding.UTF8.GetBytes(textSendText.Text);
+        //    var body = Encoding.UTF8.GetBytes(textSendText.Text);
 
-            List<byte> dataSource = new List<byte>();
-            dataSource.AddRange(BitConverter.GetBytes((UInt16)(body.Length + PacketDef.PACKET_HEADER_SIZE)));
-            dataSource.AddRange(BitConverter.GetBytes((UInt16)PACKET_ID.DEV_ECHO));
-            dataSource.AddRange(new byte[] { (byte)0 });
-            dataSource.AddRange(body);
+        //    List<byte> dataSource = new List<byte>();
+        //    dataSource.AddRange(BitConverter.GetBytes((UInt16)(body.Length + PacketDef.PACKET_HEADER_SIZE)));
+        //    dataSource.AddRange(BitConverter.GetBytes((UInt16)PACKET_ID.DEV_ECHO));
+        //    dataSource.AddRange(new byte[] { (byte)0 });
+        //    dataSource.AddRange(body);
 
-            SendPacketQueue.Enqueue(dataSource.ToArray());
-        }
+        //    SendPacketQueue.Enqueue(dataSource.ToArray());
+        //}
 
 
 

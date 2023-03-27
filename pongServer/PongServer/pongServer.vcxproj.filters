@@ -66,9 +66,6 @@
     <ClInclude Include="IocpNetworkCore.h">
       <Filter>NetCore</Filter>
     </ClInclude>
-    <ClInclude Include="IServer.h">
-      <Filter>NetCore</Filter>
-    </ClInclude>
     <ClInclude Include="ClientInfo.h">
       <Filter>NetCore</Filter>
     </ClInclude>

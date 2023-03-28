@@ -52,7 +52,6 @@ std::pair<ERROR_CODE, Room*> RoomManager::leaveUserInRoom(uint16_t userIndex)
     std::map<uint16_t, uint16_t>::iterator iter = m_userRoomMap.find(userIndex);
     if (iter != m_userRoomMap.end())
     {
-        //ERROR_CODE errorCode = m_roomPool[m_userRoomMap[userIndex]].leaveUser(userIndex);
         uint16_t tempRoomIndex = m_userRoomMap[userIndex];
         m_userRoomMap.erase(iter);
         return std::move(std::make_pair<ERROR_CODE, Room*>(m_roomPool[tempRoomIndex].leaveUser(userIndex), &m_roomPool[tempRoomIndex]));
@@ -72,16 +71,7 @@ std::pair<ERROR_CODE, Room*> RoomManager::getRoom(uint16_t roomIndex)
     return std::move(std::make_pair<ERROR_CODE, Room*>(ERROR_CODE::NONE, &m_roomPool[roomIndex]));
 }
 
-//RoomStatus RoomManager::getRoomStatus(uint16_t roomIndex)
-//{
-//    if (roomIndex > m_roomPool.size())
-//    {
-//        return std::move(std::make_pair<ERROR_CODE, Room*>(ERROR_CODE::ROOM_INVALID_INDEX, NULL));
-//    }
-//    return m_roomPool[roomIndex].
-//}
-
-std::pair<ERROR_CODE, Room*> RoomManager::getEmptyRoom(uint16_t roomIndex)
+std::pair<ERROR_CODE, Room*> RoomManager::getEmptyRoom()
 {
     for (uint16_t i = 0; i < m_maxRoomNum; i++)
     {

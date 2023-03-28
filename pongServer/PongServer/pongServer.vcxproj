@@ -138,8 +138,6 @@
     <ClCompile Include="GameUserInfo.cpp" />
     <ClCompile Include="IocpNetworkCore.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="pong.cpp" />
-    <ClCompile Include="RecvedData.hpp" />
     <ClCompile Include="RedisMatching.cpp" />
     <ClCompile Include="Room.cpp" />
     <ClCompile Include="RoomManager.cpp" />
@@ -151,10 +149,8 @@
     <ClInclude Include="ClientInfo.h" />
     <ClInclude Include="ErrorCode.hpp" />
     <ClInclude Include="GameUserInfo.h" />
-    <ClInclude Include="IGame.h" />
     <ClInclude Include="IocpNetworkCore.h" />
     <ClInclude Include="PacketsDefine.hpp" />
-    <ClInclude Include="pong.h" />
     <ClInclude Include="RedisMatching.hpp" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="RoomManager.h" />

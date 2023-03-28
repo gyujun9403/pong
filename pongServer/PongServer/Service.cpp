@@ -187,7 +187,8 @@ int Service::packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> Re
 	ROOM_READY_RESPONSE_PACKET roomReadyRes;
 	ROOM_READY_NOTIFY_PACKET roomReadyNtf;
 
-	roomReadyRes.isReady = false; // 유저가 없거나 방에도 없으면 걍 false를 보냄.
+	// 유저가 없거나 방에도 없으면 걍 false를 보냄.
+	roomReadyRes.isReady = false; 
 	std::pair<ERROR_CODE, User*> rtUser = m_userManager->getUser(clinetIndex);
 	if (rtUser.first != ERROR_CODE::NONE)
 	{
@@ -206,7 +207,7 @@ int Service::packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> Re
 	roomReadyRes.PacketId = PACKET_ID::ROOM_READY_RES;
 	roomReadyRes.PacketLength = sizeof(ROOM_READY_RESPONSE_PACKET);
 	roomReadyRes.isReady = rtRoom.second->setUserReady(clinetIndex, roomReadyReq.isReady);
-	roomReadyRes.Result = ERROR_CODE::NONE; //TODO: 게임중 조건에 따라서도 실패 넣어야하는데, 지금은 그냥 성공으로 보내고 있음.
+	roomReadyRes.Result = ERROR_CODE::NONE;
 	roomReadyNtf.isReady = roomReadyRes.isReady;
 	roomReadyNtf.PacketId = PACKET_ID::ROOM_READY_NOTIFY;
 	roomReadyNtf.PacketLength = sizeof(ROOM_READY_NOTIFY_PACKET);
@@ -226,12 +227,9 @@ int Service::packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> Re
 		{
 			userList += std::to_string(elem) + "-";
 		}
-		//m_matchingManager->pushToMatchqueue(std::move(gameUsersInfo));
 		m_matchingManager->pushToMatchQueue(userList);
-		rtRoom.second->clearAllUserReady();
-		// 모든 유저 레디 했으니, 유저 리스트를 넘김. 
+		//rtRoom.second->clearAllUserReady();
 	}
-	//ROOM GAME START
 	return 1;
 }
 
@@ -255,7 +253,6 @@ void Service::serviceThread()
 		recvRt = m_network->getFromRecvQueue();
 		if (recvRt.first != -1)
 		{
-			//divergePackets(std::move(recvRt));
 			divergePackets(recvRt);
 		}
 		closeUserIndex = m_network->getCloseUser();
@@ -304,18 +301,24 @@ void Service::redisProcessMatchingResultQueue()
 			return;
 		}
 		// 지금도 다 방에 있고 레디 상태인지 확인.
-		//std::pair<ERROR_CODE, Room*> before;
-		//std::pair<ERROR_CODE, Room*> now;
-		//before = m_roomManager->findRoomUserIn(matchedUserList[0]);
-		//for (uint16_t clinetIndexElem : matchedUserList)
-		//{
-		//	now = m_roomManager->findRoomUserIn(clinetIndexElem);
-		//	if (now.first != ERROR_CODE::NONE || now.second->isAllUserReady() == false || before != now)
-		//	{
-		//		return;
-		//	}
-		//	before = now;
-		//}
+		std::pair<ERROR_CODE, Room*> before;
+		std::pair<ERROR_CODE, Room*> now;
+		before = m_roomManager->findRoomUserIn(matchedUserList[0]);
+		for (uint16_t clinetIndexElem : matchedUserList)
+		{
+			now = m_roomManager->findRoomUserIn(clinetIndexElem);
+			if (now.first != ERROR_CODE::NONE || before != now)
+			{
+				return;
+			}
+			before = now;
+		}
+		before = m_roomManager->findRoomUserIn(matchedUserList[0]);
+		if (before.second->isAllUserReady() == false)
+		{
+			return;
+		}
+		before.second->clearAllUserReady();
 		for (uint16_t clinetIndexElem : matchedUserList)
 		{
 			GAME_START_NOTIFY_PACKET gameStartNtf;
@@ -330,9 +333,4 @@ void Service::redisProcessMatchingResultQueue()
 void Service::redisProcessGameResultQueue()
 {
 	// TODO
-	//std::vector<std::string> rt = std::move(m_matchingManager->getFormGameResultQueue());
-	//for (std::string& elem : rt)
-	//{
-	//	std::cout << "GameResult : " << elem << std::endl;
-	//}
 }

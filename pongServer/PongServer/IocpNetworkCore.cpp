@@ -6,7 +6,7 @@ IocpNetworkCore::IocpNetworkCore(const uint32_t clientNum, const uint16_t worker
 	, m_clientNum(clientNum), m_isWorkersRun(true), m_isAccpterRun(true)
 {
 	m_serverAddr.sin_family = AF_INET;
-	m_serverAddr.sin_port = htons(port); //서버 포트를 설정한다.		
+	m_serverAddr.sin_port = htons(port);
 	m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 }
 
@@ -144,13 +144,13 @@ void IocpNetworkCore::joinThreads()
 void IocpNetworkCore::closeHandle()
 {
 	CloseHandle(m_iocpHandle);
-	std::cout << "handle closed" << std::endl;
+	std::cout << "IOCP handle closed" << std::endl;
 }
 
 void IocpNetworkCore::closeSocket()
 {
 	closesocket(m_listenSocket);
-	std::cout << "soecket closed" << std::endl;
+	std::cout << "Listen soecket closed" << std::endl;
 }
 
 void IocpNetworkCore::recv(ClientInfo& clientInfo)

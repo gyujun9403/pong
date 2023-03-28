@@ -20,9 +20,6 @@
     <Filter Include="Room">
       <UniqueIdentifier>{0671f9de-fd43-41a2-b8e8-40928da99678}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Game">
-      <UniqueIdentifier>{e9b3f821-a08a-4c05-bfdb-b2d155f8889b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Redis">
       <UniqueIdentifier>{c8c991b7-eaf3-46c5-ac11-7fec0f2d6218}</UniqueIdentifier>
     </Filter>
@@ -43,14 +40,8 @@
     <ClCompile Include="Service.cpp">
       <Filter>Service</Filter>
     </ClCompile>
-    <ClCompile Include="RecvedData.hpp">
-      <Filter>Packet</Filter>
-    </ClCompile>
     <ClCompile Include="Room.cpp">
       <Filter>Room</Filter>
-    </ClCompile>
-    <ClCompile Include="pong.cpp">
-      <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="RoomManager.cpp">
       <Filter>Room</Filter>
@@ -86,12 +77,6 @@
     </ClInclude>
     <ClInclude Include="Room.h">
       <Filter>Room</Filter>
-    </ClInclude>
-    <ClInclude Include="pong.h">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="IGame.h">
-      <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="RoomManager.h">
       <Filter>Room</Filter>

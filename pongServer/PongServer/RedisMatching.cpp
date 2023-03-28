@@ -4,32 +4,6 @@
 	#include <winsock2.h>
 #endif
 
-std::vector<std::string> RedisMatching::getFromMatchQueue()
-{
-	std::unique_lock<std::mutex> matchQueueLock(m_matchingQueueMutex);
-	size_t size = m_matchingQueue.size();
-	std::vector<std::string> rt;
-	while (size--)
-	{
-		rt.emplace_back(m_matchingQueue.front());
-		m_matchingQueue.pop();
-	}
-	//return std::move(rt);
-	return rt;
-}
-
-void RedisMatching::pushToMatchResultQueue(std::string str)
-{
-	std::unique_lock<std::mutex> matchResultQueueLock(m_matchResultQueueMutex);
-	m_matchResultQueue.push(std::move(str));
-}
-
-void RedisMatching::pushToGameResultQueue(std::string str)
-{
-	std::unique_lock<std::mutex> matchQueueLock(m_gameResultQueueMutex);
-	m_gameResultQueue.push(std::move(str));
-}
-
 RedisMatching::RedisMatching(std::string ip, uint16_t port)
 : m_IP(ip), m_PORT(port)
 {
@@ -46,6 +20,31 @@ void RedisMatching::pushToMatchQueue(std::string str)
 	m_matchingQueue.push(std::move(str));
 }
 
+std::vector<std::string> RedisMatching::getFromMatchQueue()
+{
+	std::unique_lock<std::mutex> matchQueueLock(m_matchingQueueMutex);
+	size_t size = m_matchingQueue.size();
+	std::vector<std::string> rt;
+	while (size--)
+	{
+		rt.emplace_back(m_matchingQueue.front());
+		m_matchingQueue.pop();
+	}
+	return rt;
+}
+
+void RedisMatching::pushToMatchResultQueue(std::string str)
+{
+	std::unique_lock<std::mutex> matchResultQueueLock(m_matchResultQueueMutex);
+	m_matchResultQueue.push(std::move(str));
+}
+
+void RedisMatching::pushToGameResultQueue(std::string str)
+{
+	std::unique_lock<std::mutex> matchQueueLock(m_gameResultQueueMutex);
+	m_gameResultQueue.push(std::move(str));
+}
+
 std::vector<std::string> RedisMatching::getFormMatchResultQueue()
 {
 	std::unique_lock<std::mutex> matchResultQueueLock(m_matchResultQueueMutex);
@@ -56,7 +55,6 @@ std::vector<std::string> RedisMatching::getFormMatchResultQueue()
 		rt.emplace_back(m_matchResultQueue.front());
 		m_matchResultQueue.pop();
 	}
-	//return std::move(rt);
 	return rt;
 }
 
@@ -70,7 +68,6 @@ std::vector<std::string> RedisMatching::getFormGameResultQueue()
 		rt.emplace_back(m_gameResultQueue.front());
 		m_gameResultQueue.pop();
 	}
-	//return std::move(rt); //Severity	Code	Description	Project	File	Line	Suppression State Warning	C26479	Don't use std::move to return a local variable. (f.48).	pongServer	C:\Users\gujun\git\pong\pong-server\pongServer\pongServer\RedisMatching.cpp	75	
 	return rt;
 }
 
@@ -105,26 +102,28 @@ void RedisMatching::runSendMatchingThread()
 			while (1)
 			{
 				std::vector<std::string> members = getFromMatchQueue();
-				// matching queue내용들 집어넣기
+				// matchingqueue =(push)=> Redis
 				if (members.size() > 0)
 				{
 					for(std::string& elem : members)
 					{
 						std::string cmdFormat = "RPUSH matching " + elem;
 						redisReply* reply = (redisReply*)redisCommand(m_c, cmdFormat.c_str());
-						if (reply == NULL) {
+						if (reply == NULL)
+						{
 							printf("redisCommand reply is NULL: %s\n", m_c->errstr);
 							return;
 						}
-						if (reply->type == REDIS_REPLY_ERROR) {
+						if (reply->type == REDIS_REPLY_ERROR)
+						{
 							printf("Command Error: %s\n", reply->str);
 							freeReplyObject(reply);
 							return;
 						}
-						freeReplyObject(reply); //hi
+						freeReplyObject(reply); 
 					}
 				}
-				// matchedqueue에 매칭된애들 집어넣기
+				// matchedqueue <=(pop)= Redis
 				while (1)
 				{
 					redisReply* reply = (redisReply*)redisCommand(m_c, "LPOP matched");
@@ -133,13 +132,13 @@ void RedisMatching::runSendMatchingThread()
 						printf("redisCommand reply is NULL: %s\n", m_c->errstr);
 						break ;
 					}
-					if (reply->type == REDIS_REPLY_ERROR)
+					else if (reply->type == REDIS_REPLY_ERROR)
 					{
 						printf("Command Error: %s\n", reply->str);
 						freeReplyObject(reply);
 						break ;
 					}
-					if (reply->str == NULL)
+					else if (reply->str == NULL)
 					{
 						freeReplyObject(reply);
 						break;
@@ -147,7 +146,7 @@ void RedisMatching::runSendMatchingThread()
 					pushToMatchResultQueue(std::string(reply->str));
 					freeReplyObject(reply);
 				}
-				// resultqueue에 결과 나온 애들 집어넣기
+				// matchedqueue <=(pop)= Redis
 				while (1)
 				{
 					redisReply* reply = (redisReply*)redisCommand(m_c, "LPOP gameResult");
@@ -182,45 +181,53 @@ void RedisMatching::runRecvMatchingThread()
 	(
 		[this]()
 		{
+			// matchingQueue <=(pop)= Redis
 			while (1)
 			{
-				redisReply* reply = (redisReply*)redisCommand(m_c, "LPOP matching");
-				if (reply == NULL) {
-					printf("redisCommand reply is NULL: %s\n", m_c->errstr);
-					return;
-				}
-				if (reply->type == REDIS_REPLY_ERROR) {
-					printf("Command Error: %s\n", reply->str);
-					freeReplyObject(reply);
-					return;
-				}
-				if (reply->str != NULL)
+				while (1)
 				{
+					redisReply* reply = (redisReply*)redisCommand(m_c, "LPOP matching");
+					if (reply == NULL) {
+						printf("redisCommand reply is NULL: %s\n", m_c->errstr);
+						return;
+					}
+					else if (reply->type == REDIS_REPLY_ERROR) {
+						printf("Command Error: %s\n", reply->str);
+						freeReplyObject(reply);
+						return;
+					}
+					else if (reply->str == NULL)
+					{
+						freeReplyObject(reply);
+						break;
+					}
 					pushToMatchQueue(reply->str);
+					freeReplyObject(reply);
 				}
-				freeReplyObject(reply);
+				// matchResultQueue =(push)=> Redis
 				std::vector<std::string> matchedMembers = getFormMatchResultQueue();
-				// matching queue내용들 집어넣기
 				if (matchedMembers.size() > 0)
 				{
 					for (std::string& elem : matchedMembers)
 					{
 						std::string cmdFormat = "RPUSH matched " + elem;
 						redisReply* reply = (redisReply*)redisCommand(m_c, cmdFormat.c_str());
-						if (reply == NULL) {
+						if (reply == NULL)
+						{
 							printf("redisCommand reply is NULL: %s\n", m_c->errstr);
 							return;
 						}
-						if (reply->type == REDIS_REPLY_ERROR) {
+						if (reply->type == REDIS_REPLY_ERROR)
+						{
 							printf("Command Error: %s\n", reply->str);
 							freeReplyObject(reply);
 							return;
 						}
-						freeReplyObject(reply); //hi
+						freeReplyObject(reply);
 					}
 				}
+				// gameResultQueue =(push)=> Redis
 				std::vector<std::string> gameDoneMembers = getFormGameResultQueue();
-				// matching queue내용들 집어넣기
 				if (gameDoneMembers.size() > 0)
 				{
 					for (std::string& elem : gameDoneMembers)
@@ -236,11 +243,11 @@ void RedisMatching::runRecvMatchingThread()
 							freeReplyObject(reply);
 							return;
 						}
-						freeReplyObject(reply); //hi
+						freeReplyObject(reply);
 					}
 				}
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			};
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			}
 		}
 	);
 }

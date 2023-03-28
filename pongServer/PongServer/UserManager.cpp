@@ -4,7 +4,6 @@ UserManager::UserManager(const uint16_t MaxUserNum)
 {
 	for (uint16_t i = 0; i < MaxUserNum; i++)
 	{
-		//m_ClientInfoPool.emplace_back(i);
 		m_UserPool.emplace_back();
 	}
 }
@@ -20,7 +19,6 @@ std::pair<ERROR_CODE, User*> UserManager::setUser(const uint16_t clientIndex, co
 	else
 	{
 		return std::make_pair<ERROR_CODE, User*>(ERROR_CODE::LOGIN_USER_ALREADY, &m_UserPool[clientIndex]);
-		//throw "INVALID USER POOL";
 	}
 }
 
@@ -41,13 +39,11 @@ ERROR_CODE UserManager::deleteUser(const uint16_t index)
 
 ERROR_CODE UserManager::deleteUser(const std::string id)
 {
-	//User& user = m_UserPool.at(m_userIdMap.find(id)->second);
 	return this->deleteUser(m_userIdMap.find(id)->second);
 }
 
 std::pair<ERROR_CODE, User*> UserManager::getUser(const uint16_t ClientIndex)
 {
-	// TODO: 여기에 return 문을 삽입합니다.
 	if (m_UserPool[ClientIndex].isUsing() == true)
 	{
 		return std::make_pair<ERROR_CODE, User*>(ERROR_CODE::NONE, &m_UserPool.at(ClientIndex));
@@ -60,7 +56,6 @@ std::pair<ERROR_CODE, User*> UserManager::getUser(const uint16_t ClientIndex)
 
 std::pair<ERROR_CODE, User*> UserManager::getUser(const std::string id)
 {
-	// TODO: 여기에 return 문을 삽입합니다.
 	if (m_userIdMap.find(id) == m_userIdMap.end())
 	{
 		return std::make_pair<ERROR_CODE, User*>(ERROR_CODE::USER_MGR_INVALID_USER_UNIQUEID, NULL);

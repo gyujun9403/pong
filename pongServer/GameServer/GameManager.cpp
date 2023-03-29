@@ -1,7 +1,7 @@
 #include "GameManager.h"
 #include <cstdlib>
 
-GameManagerService::GameManagerService(IocpNetworkCore* network, RedisMatching* redis, uint16_t gameNum)
+GameManagerService::GameManagerService(IocpNetworkCore* network, RedisMatching* redis, int32_t gameNum)
 	:m_network(network), m_redis(redis), m_gameNum(gameNum)
 {
 }
@@ -10,21 +10,19 @@ int GameManagerService::packetProcessGameEnterRequest(int clinetIndex, std::vect
 {
 	GAME_ENTER_REQUEST_PACKET gameEnterReq;
 	GAME_ENTER_RESPONSE_PACKET gameEnterRes;
-	// 게임에 등록된 사람인지 확인.
 	std::move(ReqPacket.begin(), ReqPacket.end(), (char*)&gameEnterReq);
 	gameEnterRes.PacketId = PACKET_ID::GAME_ENTER_RES;
 	gameEnterRes.PacketLength = sizeof(GAME_ENTER_RESPONSE_PACKET);
 	std::map<int32_t, UserInfo >::iterator it = m_userInfoMap.find(gameEnterReq.key);
 	if (it == m_userInfoMap.end())
 	{
-		// 실패 결과 보냄.
 		gameEnterRes.Result = ERROR_CODE::GAME_NOT_MATCHED_USER;
 	}
 	else
 	{
 		it->second.ClinetIndex = clinetIndex;
 		m_ClinetUserMap.insert(std::move(std::make_pair(clinetIndex, it->first)));
-		// 만약 두명 다 등록 했다면 게임을 RUN상태로
+		// 만약 두명 다 등록 했다면 바로 게임을 RUN상태로
 		it->second.gameIndex->enterUserInGame(it->first);
 		gameEnterRes.Result = ERROR_CODE::NONE;
 	}
@@ -35,8 +33,9 @@ int GameManagerService::packetProcessGameEnterRequest(int clinetIndex, std::vect
 int GameManagerService::packetProcessGameControlRequest(int clinetIndex, std::vector<char> ReqPacket)
 {
 	GAME_CONTROL_REQUEST_PACKET gameControlReq;
-	//GAME_ENTER_RESPONSE_PACKET gameControlRes;
 	std::move(ReqPacket.begin(), ReqPacket.end(), (char*)&gameControlReq);
+	// TODO:모든 경우에 성공 패킷을 보내야 하는가?
+	//GAME_ENTER_RESPONSE_PACKET gameControlRes;
 	//gameEnterRes.PacketId = PACKET_ID::Game;
 	//gameEnterRes.PacketLength = sizeof(GAME_ENTER_RESPONSE_PACKET);
 	std::map<int32_t, UserInfo >::iterator it = m_userInfoMap.find(gameControlReq.key);
@@ -81,27 +80,38 @@ int GameManagerService::divergePackets(std::pair<int, std::vector<char>> packetS
 
 void GameManagerService::syncGames()
 {
-	
+	GAME_RESULT_NOTIFY_PACKET gameResultNtf;
+	GAME_LAPSE_NOTIFY_PACKET gameLapseNtf;
+	gameResultNtf.PacketId = PACKET_ID::GAME_RESULT_NOTIFY;
+	gameResultNtf.PacketLength = sizeof(GAME_RESULT_NOTIFY_PACKET);
+	gameLapseNtf.PacketId = PACKET_ID::GAME_LAPSE_NOTIFY;
+	gameLapseNtf.PacketLength = sizeof(GAME_LAPSE_NOTIFY_PACKET);
 	for (Game& elemGame : m_games)
 	{
-		if (elemGame.getGameStatus() != GameStatus::RUNNING)
+		GameStatus elemStatus = elemGame.getGameStatus();
+		// GameStatus::WAITING하고 있는 경우, 인원체크도 해야함.
+		if (elemStatus == GameStatus::EMPTY || elemStatus == GameStatus::FINISHED)
 		{
 			continue;
 		}
-		std::pair<std::vector<uint16_t>, std::vector<uint16_t> > rt = std::move(elemGame.syncGame());
-		GAME_RESULT_NOTIFY_PACKET gameResultNtf;
-		GAME_LAPSE_NOTIFY_PACKET gameLapseNtf;
-		gameResultNtf.PacketId = PACKET_ID::GAME_RESULT_NOTIFY;
-		gameResultNtf.PacketLength = sizeof(GAME_RESULT_NOTIFY_PACKET);
-		gameLapseNtf.PacketId = PACKET_ID::GAME_LAPSE_NOTIFY;
-		gameLapseNtf.PacketLength = sizeof(GAME_LAPSE_NOTIFY_PACKET);
-		// 게임이 어떻게든 결과가 난 경우.
-		std::vector<uint16_t> allUsers = std::move(elemGame.getAllUsers());
-		if (!rt.first.empty() || !rt.second.empty())
+		GameSyncResult syncRt = elemGame.syncGame();
+		std::pair<std::vector<int32_t>, std::vector<int32_t> > gameResult;
+		if (syncRt == GameSyncResult::FINISH)
 		{
-			elemGame.clearGame();
-			// 유저 키와 실제 게임 서버에서 클라를 확인할 방법 필요. -> 매핑해야함. gameenterreq사용.
-			for (uint16_t elem : rt.first)
+			gameResult = std::move(elemGame.finishGame());
+		}
+		else if (syncRt == GameSyncResult::VOIDGAME)
+		{
+			m_network->kickUser(std::move(elemGame.getAllUsers()));
+			elemGame.voidGame();
+			//연결끊기
+
+			continue;
+		}
+		std::vector<int32_t> allUsers = std::move(elemGame.getAllUsers());
+		if (!gameResult.first.empty() || !gameResult.second.empty()) // Game finished
+		{
+			for (int32_t elem : gameResult.first)
 			{
 				std::map<int32_t, UserInfo >::iterator it = m_userInfoMap.find(elem);
 				if (it != m_userInfoMap.end())
@@ -111,11 +121,11 @@ void GameManagerService::syncGames()
 						gameResultNtf.result = true;
 						pushPacketToSendQueue(it->second.ClinetIndex, reinterpret_cast<char*>(&gameResultNtf), gameResultNtf.PacketLength);
 					}
-					m_ClinetUserMap.erase(it->second.ClinetIndex); // C
+					m_ClinetUserMap.erase(it->second.ClinetIndex);
 					m_userInfoMap.erase(it);
 				}
 			}
-			for (uint16_t elem : rt.second)
+			for (int32_t elem : gameResult.second)
 			{
 				std::map<int32_t, UserInfo >::iterator it = m_userInfoMap.find(elem);
 				if (it != m_userInfoMap.end())
@@ -125,14 +135,15 @@ void GameManagerService::syncGames()
 						gameResultNtf.result = false;
 						pushPacketToSendQueue(it->second.ClinetIndex, reinterpret_cast<char*>(&gameResultNtf), gameResultNtf.PacketLength);
 					}
-					m_ClinetUserMap.erase(it->second.ClinetIndex); // C
+					m_ClinetUserMap.erase(it->second.ClinetIndex);
 					m_userInfoMap.erase(it);
 				}
 			}
+			m_network->kickUser(std::move(allUsers));
 		}
-		else
+		else // Sync Ntf
 		{
-			for (uint16_t elem : allUsers)
+			for (int32_t elem : allUsers)
 			{
 				std::map<int32_t, UserInfo >::iterator it = m_userInfoMap.find(elem);
 				if (it != m_userInfoMap.end())
@@ -160,50 +171,56 @@ Game* GameManagerService::getEmptyGame()
 	return NULL;
 }
 
-Game* GameManagerService::setUserInGame(std::vector<uint16_t> userList)
+bool GameManagerService::setUserInGame(std::vector<int32_t> userList, Game* emptyGame)
 {
-	Game* rtGame = getEmptyGame();
-	if (rtGame == NULL)
+	//Game* rtGame = getEmptyGame();
+	//if (rtGame == NULL)
+	//{
+	//	return NULL;
+	//}
+	emptyGame->setUsersInGame(userList);
+	for (int32_t elem : userList)
 	{
-		return NULL;
-	}
-	rtGame->setUsersInGame(userList);
-	for (uint16_t elem : userList)
-	{
-		UserInfo temp = { -1, rtGame };
+		UserInfo temp = { -1, emptyGame };
 		m_userInfoMap.insert(std::move(std::make_pair(elem, std::move(temp))));
 	}
+	return true;
 }
 
 
-void GameManagerService::makeUsersLose(std::vector<uint16_t> losers)
+void GameManagerService::makeUsersLose(std::vector<int32_t> losers)
 {
 
 }
 
-void GameManagerService::parseAndSetUsers(std::vector<std::string> redisReqs)
+void GameManagerService::parseAndSetUsers(std::vector<std::string> redisReqs, Game* emptyGame)
 {
 	for (std::string elem : redisReqs)
 	{
-		std::vector<uint16_t> matchingUserList;
+		std::vector<int32_t> matchingUserList;
 		std::stringstream ss(elem);
 		std::string token;
 
 		while (std::getline(ss, token, '-')) {
 			matchingUserList.push_back(std::stoi(token));
 		}
-		setUserInGame(matchingUserList);
+		setUserInGame(matchingUserList, emptyGame);
 		m_redis->pushToMatchResultQueue(elem);
 	}
 }
 
 void GameManagerService::gameServiceThread()
 {
+	Game* emptyGame;
 	int32_t closeUserIndex;
 	std::pair<int, std::vector<char> > recvRt;
 	while (m_isGameRun.load())
 	{
-		parseAndSetUsers(m_redis->getFromMatchQueue());
+		emptyGame = getEmptyGame();
+		if (emptyGame != NULL)
+		{
+			parseAndSetUsers(m_redis->getFromMatchQueue(), emptyGame);
+		}
 		recvRt = m_network->getFromRecvQueue();
 		if (recvRt.first != -1)
 		{

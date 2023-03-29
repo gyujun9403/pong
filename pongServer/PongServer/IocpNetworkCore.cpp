@@ -125,6 +125,13 @@ void IocpNetworkCore::iocpRun()
 			acceptThreadFunc();
 		}
 	);
+	m_kickThread = std::thread
+	(
+		[this]()
+		{
+			kickThreadTunc();
+		}
+	);
 	std::cout << "IOCP running..." << std::endl;
 }
 
@@ -139,7 +146,6 @@ void IocpNetworkCore::joinThreads()
 	}
 	std::cout << "threads join done" << std::endl;
 }
-
 
 void IocpNetworkCore::closeHandle()
 {
@@ -214,12 +220,22 @@ int32_t IocpNetworkCore::getCloseUser()
 {
 	int32_t closeUserIndex = -1;
 	std::lock_guard<std::mutex> closeUserLock(m_closedUserIndexQueueMutex);
-	if (m_closeUserIndexQueue.size() != 0)
+	if (m_closedUserIndexQueue.size() != 0)
 	{
-		closeUserIndex = m_closeUserIndexQueue.front();
-		m_closeUserIndexQueue.pop();
+		closeUserIndex = m_closedUserIndexQueue.front();
+		m_closedUserIndexQueue.pop();
 	}
 	return closeUserIndex;
+}
+
+void IocpNetworkCore::kickUser(std::vector<int32_t> users)
+{
+	std::lock_guard<std::mutex> kickUserLock(m_kickUserIndexQueueMutex);
+	for (uint32_t userElem : users)
+	{
+		m_kickUserIndexQueue.push(userElem);
+	}
+	m_kickUserCV.notify_one();
 }
 
 void IocpNetworkCore::send(ClientInfo& clientInfo)
@@ -304,6 +320,20 @@ void IocpNetworkCore::acceptThreadFunc()
 	std::cout << "accept stop" << std::endl;
 }
 
+void IocpNetworkCore::kickThreadTunc()
+{
+	std::unique_lock<std::mutex> kickUserLock(m_kickUserIndexQueueMutex);
+	m_kickUserCV.wait(kickUserLock);
+	while (!m_kickUserIndexQueue.empty())
+	{
+		if (m_clients[m_kickUserIndexQueue.front()].clientSocket != INVALID_SOCKET)
+		{
+			closeClient(m_clients[m_kickUserIndexQueue.front()], true);
+		}
+		m_kickUserIndexQueue.pop();
+	}
+}
+
 void IocpNetworkCore::closeClient(ClientInfo& clientInfo, bool forceClose)
 {
 	uint32_t clientIndex = clientInfo.index;
@@ -329,7 +359,7 @@ void IocpNetworkCore::closeClient(ClientInfo& clientInfo, bool forceClose)
 	std::cout << clientInfo.index << " clinet out" << std::endl;
 	clientInfo.clearClientInfo();
 	std::lock_guard<std::mutex> closeUserLock(m_closedUserIndexQueueMutex);
-	m_closeUserIndexQueue.push(clientInfo.index);
+	m_closedUserIndexQueue.push(clientInfo.index);
 }
 
 

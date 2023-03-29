@@ -25,13 +25,18 @@ private:
 	std::atomic_bool m_isWorkersRun;
 	std::atomic_bool m_isAccpterRun;
 	std::thread m_accecpThread;
+	std::thread m_kickThread;
 	std::vector<std::thread> m_workers;
 
 	std::mutex m_recvQueueMutex;
-	std::queue<std::pair<int, std::vector<char> > > m_recvResultQueue;
+	std::queue<std::pair<int32_t, std::vector<char> > > m_recvResultQueue;
 	
 	std::mutex m_closedUserIndexQueueMutex;
-	std::queue<int> m_closeUserIndexQueue;
+	std::queue<int32_t> m_closedUserIndexQueue;
+
+	std::mutex m_kickUserIndexQueueMutex;
+	std::queue<int32_t> m_kickUserIndexQueue;
+	std::condition_variable m_kickUserCV;
 
 	void init();
 	void bind();
@@ -40,6 +45,7 @@ private:
 	void iocpRun();
 	void workerThreadFunc();
 	void acceptThreadFunc();
+	void kickThreadTunc();
 	void joinThreads();
 	void closeHandle();
 	void closeSocket();
@@ -55,6 +61,7 @@ public:
 	void pushToSendQueue(uint16_t clientIndex, std::vector<char> packet);
 	std::pair<int, std::vector<char> > getFromRecvQueue();
 	int32_t getCloseUser();
+	void kickUser(std::vector<int32_t> users);
 	virtual bool initServer();
 	virtual bool upServer();
 	virtual void downServer();

@@ -2,7 +2,7 @@
 #include "PacketsDefine.hpp"
 #include "ErrorCode.hpp"
 
-Service::Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, RedisMatching* matchingManager)
+Service::Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, AsyncRedis* matchingManager)
 :m_network(network), m_userManager(userManager), m_isServiceRun(true), m_roomManager(roomManager), m_matchingManager(matchingManager)
 {
 }
@@ -74,7 +74,6 @@ ROOM_USER_LIST_NOTIFY_PACKET Service::makeUserListPacket(std::vector<uint16_t> u
 		std::string userId = m_userManager->getUser(elem).second->getUserId();
 		rt.listArr[rt.UserCount].userClinetNum = elem;
 		rt.listArr[rt.UserCount].userIdLen = MAX_USER_ID_LEN + 1;
-		// ???? 지금은 왜 또 발생 안해....
 		std::copy(userId.begin(), userId.end(), rt.listArr[rt.UserCount].id);
 		++rt.UserCount;
 	}
@@ -187,7 +186,6 @@ int Service::packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> Re
 	ROOM_READY_RESPONSE_PACKET roomReadyRes;
 	ROOM_READY_NOTIFY_PACKET roomReadyNtf;
 
-	// 유저가 없거나 방에도 없으면 걍 false를 보냄.
 	roomReadyRes.isReady = false; 
 	std::pair<ERROR_CODE, User*> rtUser = m_userManager->getUser(clinetIndex);
 	if (rtUser.first != ERROR_CODE::NONE)
@@ -228,7 +226,6 @@ int Service::packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> Re
 			userList += std::to_string(elem) + "-";
 		}
 		m_matchingManager->pushToMatchQueue(userList);
-		//rtRoom.second->clearAllUserReady();
 	}
 	return 1;
 }
@@ -300,7 +297,6 @@ void Service::redisProcessMatchingResultQueue()
 		{
 			return;
 		}
-		// 지금도 다 방에 있고 레디 상태인지 확인.
 		std::pair<ERROR_CODE, Room*> before;
 		std::pair<ERROR_CODE, Room*> now;
 		before = m_roomManager->findRoomUserIn(matchedUserList[0]);

@@ -20,7 +20,6 @@ bool IocpNetworkCore::initServer()
 	}
 	catch (const std::string& errStr)
 	{
-		//std::cerr << errStr << std::endl;
 		m_logger->log(LogLevel::ERR, errStr);
 		return false;
 	}
@@ -38,7 +37,6 @@ bool IocpNetworkCore::upServer()
 	}
 	catch (const std::string& errStr)
 	{
-		//std::cerr << errStr << std::endl;
 		m_logger->log(LogLevel::ERR, errStr);
 		return false;
 	}
@@ -62,7 +60,7 @@ void IocpNetworkCore::init()
 {
 	int rt;
 	WSADATA dummyWsaData;
-	rt = WSAStartup(MAKEWORD(2, 2), &dummyWsaData); //https://learn.microsoft.com/ko-kr/windows/win32/api/winsock/nf-winsock-wsastartup
+	rt = WSAStartup(MAKEWORD(2, 2), &dummyWsaData);
 	if (rt != 0)
 	{
 		std::string throwStr = "Init Error(WSAStartup(...), Erro code:" + std::to_string(rt) + ")";
@@ -73,7 +71,6 @@ void IocpNetworkCore::init()
 	{
 		throw makeErrorStr("WSASocketW()");
 	}
-	//std::cout << "init Success" << std::endl;
 	m_logger->log(LogLevel::INFO, "init Success");
 }
 
@@ -83,7 +80,6 @@ void IocpNetworkCore::bind()
 	{
 		throw makeErrorStr("::bind(...)");
 	}
-	//std::cout << "bind Success" << std::endl;
 	m_logger->log(LogLevel::INFO, "bind Success");
 }
 
@@ -93,7 +89,6 @@ void IocpNetworkCore::listen()
 	{
 		throw makeErrorStr("::listen(...)");
 	}
-	//std::cout << "listen Success" << std::endl;
 	m_logger->log(LogLevel::INFO, "listen Success");
 }
 
@@ -109,7 +104,6 @@ void IocpNetworkCore::iocpInit()
 	{
 		throw makeErrorStr("CreateIoCompletionPort(...) init");
 	}
-	//std::cout << "IOCP init Success" << std::endl;
 	m_logger->log(LogLevel::INFO, "IOCP init Success");
 }
 
@@ -141,7 +135,6 @@ void IocpNetworkCore::iocpRun()
 			kickThreadTunc();
 		}
 	);
-	//std::cout << "IOCP running..." << std::endl;
 	m_logger->log(LogLevel::INFO, "IOCP running...");
 }
 
@@ -154,21 +147,18 @@ void IocpNetworkCore::joinThreads()
 	{
 		m_workers[i].join();
 	}
-	//std::cout << "threads join done" << std::endl;
 	m_logger->log(LogLevel::INFO, "threads join done");
 }
 
 void IocpNetworkCore::closeHandle()
 {
 	CloseHandle(m_iocpHandle);
-	//std::cout << "IOCP handle closed" << std::endl;
 	m_logger->log(LogLevel::INFO, "IOCP handle closed");
 }
 
 void IocpNetworkCore::closeSocket()
 {
 	closesocket(m_listenSocket);
-	//std::cout << "Listen soecket closed" << std::endl;
 	m_logger->log(LogLevel::INFO, "Listen soecket closed");
 }
 
@@ -197,7 +187,6 @@ void IocpNetworkCore::recv(ClientInfo& clientInfo)
 	{
 		if (WSAGetLastError() != ERROR_IO_PENDING)
 		{
-			//std::cerr << makeErrorStr("WSARecv()") << std::endl;
 			m_logger->log(LogLevel::ERR, makeErrorStr("WSARecv()"));
 		}
 	}
@@ -206,9 +195,7 @@ void IocpNetworkCore::recv(ClientInfo& clientInfo)
 
 
 void IocpNetworkCore::pushToSendQueue(uint16_t clientIndex, std::vector<char> packet)
-{
-	// lock을 클라별로 가지고 있음.
-	
+{	
 	std::lock_guard<std::mutex> pushQueueLock(m_clients[clientIndex].sendQueueMutex);
 	m_clients[clientIndex].sendQueue.push(packet);
 	if (m_clients[clientIndex].sendQueue.size() == 1)
@@ -281,7 +268,6 @@ void IocpNetworkCore::send(ClientInfo& clientInfo)
 	{
 		if (WSAGetLastError() != ERROR_IO_PENDING)
 		{
-			//std::cerr << makeErrorStr("WSASend()") << std::endl;
 			m_logger->log(LogLevel::ERR, makeErrorStr("WSASend()"));
 		}
 	}
@@ -305,7 +291,6 @@ void IocpNetworkCore::acceptThreadFunc()
 		}
 		if (emptyClientInfo == NULL)
 		{
-			//std::cerr << makeErrorStr("emptyClientInfo") << std::endl;
 			m_logger->log(LogLevel::ERR, makeErrorStr("emptyClientInfo"));
 			return;
 		}
@@ -314,7 +299,6 @@ void IocpNetworkCore::acceptThreadFunc()
 		if (emptyClientInfo->clientSocket == INVALID_SOCKET
 			|| emptyClientInfo->clientSocket == NULL)
 		{
-			//std::cerr << makeErrorStr("accept") << std::endl;
 			m_logger->log(LogLevel::ERR, makeErrorStr("accept"));
 			return;
 		}
@@ -328,15 +312,12 @@ void IocpNetworkCore::acceptThreadFunc()
 		);
 		if (rtHandle != m_iocpHandle)
 		{
-			//std::cerr << makeErrorStr("CreateIoCompletionPort?") << std::endl;
 			m_logger->log(LogLevel::ERR, makeErrorStr("CreateIoCompletionPort"));
 			return;
 		}
-		//std::cout << emptyClientInfo->index << " accepted" << std::endl;
 		m_logger->log(LogLevel::INFO, std::move(std::to_string(emptyClientInfo->index) + " accepted"));
 		recv(*emptyClientInfo);
 	}
-	//std::cout << "accept stop" << std::endl;
 	m_logger->log(LogLevel::INFO, "accept stop");
 }
 
@@ -376,7 +357,6 @@ void IocpNetworkCore::closeClient(ClientInfo& clientInfo, bool forceClose)
 		sizeof(ligerOpt)
 	);
 	closesocket(clientInfo.clientSocket);
-	//std::cout << clientInfo.index << " clinet out" << std::endl;
 	m_logger->log(LogLevel::INFO, std::move(std::to_string(clientInfo.index) + " clinet out"));
 	clientInfo.clearClientInfo();
 	std::lock_guard<std::mutex> closeUserLock(m_closedUserIndexQueueMutex);
@@ -474,7 +454,6 @@ void IocpNetworkCore::workerThreadFunc()
 			throw "?????";
 		}
 	}
-	//std::cout << "woker stop" << std::endl;
 	m_logger->log(LogLevel::INFO, "woker stop");
 }
 

@@ -57,7 +57,6 @@ private:
 	std::string makeErrorStr(const std::string errFunc);
 public:
 	IocpNetworkCore() = delete;
-	// 서버 유저수, 워커스레드 개수
 	IocpNetworkCore(uint32_t clientNum, uint16_t workerThreadNum, uint16_t port, Logger* logger);
 	~IocpNetworkCore() {}
 	void pushToSendQueue(uint16_t clientIndex, std::vector<char> packet);

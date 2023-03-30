@@ -1,7 +1,7 @@
 #include "GameManager.h"
 #include <cstdlib>
 
-GameManagerService::GameManagerService(IocpNetworkCore* network, RedisMatching* redis, int32_t gameNum)
+GameManagerService::GameManagerService(IocpNetworkCore* network, AsyncRedis* redis, int32_t gameNum)
 	:m_network(network), m_redis(redis), m_gameNum(gameNum)
 {
 }

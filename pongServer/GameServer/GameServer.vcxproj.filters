@@ -13,7 +13,6 @@
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\pongServer\ClientInfo.cpp" />
-    <ClCompile Include="..\pongServer\RedisMatching.cpp" />
     <ClCompile Include="..\pongServer\GameUserInfo.cpp" />
     <ClCompile Include="GameManager.cpp">
       <Filter>Game</Filter>
@@ -23,10 +22,10 @@
     </ClCompile>
     <ClCompile Include="..\pongServer\IocpNetworkCore.cpp" />
     <ClCompile Include="..\PongServer\Logger.cpp" />
+    <ClCompile Include="..\PongServer\AsyncRedis.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\pongServer\ClientInfo.h" />
-    <ClInclude Include="..\pongServer\RedisMatching.hpp" />
     <ClInclude Include="..\pongServer\GameUserInfo.h" />
     <ClInclude Include="GameManager.h">
       <Filter>Game</Filter>
@@ -36,5 +35,6 @@
     </ClInclude>
     <ClInclude Include="..\pongServer\IocpNetworkCore.h" />
     <ClInclude Include="..\PongServer\Logger.h" />
+    <ClInclude Include="..\PongServer\AsyncRedis.hpp" />
   </ItemGroup>
 </Project>

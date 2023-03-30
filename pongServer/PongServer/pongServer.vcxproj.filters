@@ -52,7 +52,7 @@
     <ClCompile Include="GameUserInfo.cpp">
       <Filter>Redis</Filter>
     </ClCompile>
-    <ClCompile Include="RedisMatching.cpp">
+    <ClCompile Include="AsyncRedis.cpp">
       <Filter>Redis</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
@@ -90,7 +90,7 @@
     <ClInclude Include="GameUserInfo.h">
       <Filter>Redis</Filter>
     </ClInclude>
-    <ClInclude Include="RedisMatching.hpp">
+    <ClInclude Include="AsyncRedis.hpp">
       <Filter>Redis</Filter>
     </ClInclude>
     <ClInclude Include="Logger.h">

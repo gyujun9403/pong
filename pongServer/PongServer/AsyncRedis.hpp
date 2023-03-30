@@ -11,7 +11,7 @@
 #include "GameUserInfo.h"
 #include "Logger.h"
 
-class RedisMatching
+class AsyncRedis
 {
 private:
 	Logger* m_logger;
@@ -20,7 +20,7 @@ private:
 	uint64_t m_keysCnt = 0;
 	redisContext* m_c;
 
-	std::thread m_redisMatchingThread;
+	std::thread m_redisThread;
 
 	std::queue<std::string> m_matchingQueue;
 	std::mutex m_matchingQueueMutex;
@@ -31,11 +31,11 @@ private:
 	std::queue<std::string> m_gameResultQueue;
 	std::mutex m_gameResultQueueMutex;
 public:
-	RedisMatching(std::string ip, uint16_t port, Logger* logger);
+	AsyncRedis(std::string ip, uint16_t port, Logger* logger);
 	void runSendMatchingThread();
 	void runRecvMatchingThread();
 	bool RedisInit();
-	~RedisMatching();
+	~AsyncRedis();
 	// 본체 서버에서 사용.
 	void pushToMatchQueue(std::string str);
 	std::vector<std::string> getFormMatchResultQueue();

@@ -2,7 +2,7 @@
 #include "Service.hpp"
 #include "UserManager.hpp"
 #include "RoomManager.h"
-#include "RedisMatching.hpp"
+#include "AsyncRedis.hpp"
 #include "Logger.h"
 
 int main()
@@ -11,7 +11,7 @@ int main()
 	UserManager userManager(34);
 	RoomManager roomManager(60);
 	IocpNetworkCore network(34, 4, 3334, &logger);
-	RedisMatching matchingManager("127.0.0.1", 6379, &logger);
+	AsyncRedis matchingManager("127.0.0.1", 6379, &logger);
 	Service service(&network, &userManager, &roomManager, &matchingManager);
 
 	network.initServer();

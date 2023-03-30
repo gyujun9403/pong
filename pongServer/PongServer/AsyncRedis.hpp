@@ -8,7 +8,6 @@
 #include <queue>
 #include <mutex>
 #include <thread>
-#include "GameUserInfo.h"
 #include "Logger.h"
 
 class AsyncRedis

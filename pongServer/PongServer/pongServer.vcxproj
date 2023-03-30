@@ -135,7 +135,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GameUserInfo.cpp" />
     <ClCompile Include="IocpNetworkCore.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
@@ -149,7 +148,6 @@
   <ItemGroup>
     <ClInclude Include="ClientInfo.h" />
     <ClInclude Include="ErrorCode.hpp" />
-    <ClInclude Include="GameUserInfo.h" />
     <ClInclude Include="IocpNetworkCore.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="PacketsDefine.hpp" />

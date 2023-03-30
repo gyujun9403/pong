@@ -49,9 +49,6 @@
     <ClCompile Include="RoomManager.cpp">
       <Filter>Room</Filter>
     </ClCompile>
-    <ClCompile Include="GameUserInfo.cpp">
-      <Filter>Redis</Filter>
-    </ClCompile>
     <ClCompile Include="AsyncRedis.cpp">
       <Filter>Redis</Filter>
     </ClCompile>
@@ -86,9 +83,6 @@
     </ClInclude>
     <ClInclude Include="RoomManager.h">
       <Filter>Room</Filter>
-    </ClInclude>
-    <ClInclude Include="GameUserInfo.h">
-      <Filter>Redis</Filter>
     </ClInclude>
     <ClInclude Include="AsyncRedis.hpp">
       <Filter>Redis</Filter>

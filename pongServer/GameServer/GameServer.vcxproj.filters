@@ -7,34 +7,60 @@
     <Filter Include="Game">
       <UniqueIdentifier>{a2ca4f73-013c-48b3-9af9-1cebc87fb3e7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Logger">
+      <UniqueIdentifier>{96bb902e-48b8-486f-8994-47b49d08d3c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Redis">
+      <UniqueIdentifier>{cd412eb1-ecc6-4b57-ab06-eebd95bbdd4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NetCore">
+      <UniqueIdentifier>{042aed42-464b-4bfc-926c-b2a07472ad79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NewFilter1">
+      <UniqueIdentifier>{c6ad1276-f330-4824-b039-15f8c4a524e3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\pongServer\ClientInfo.cpp" />
-    <ClCompile Include="..\pongServer\GameUserInfo.cpp" />
     <ClCompile Include="GameManager.cpp">
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="Game.cpp">
       <Filter>Game</Filter>
     </ClCompile>
-    <ClCompile Include="..\pongServer\IocpNetworkCore.cpp" />
-    <ClCompile Include="..\PongServer\Logger.cpp" />
-    <ClCompile Include="..\PongServer\AsyncRedis.cpp" />
+    <ClCompile Include="..\PongServer\Logger.cpp">
+      <Filter>Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\PongServer\AsyncRedis.cpp">
+      <Filter>Redis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pongServer\IocpNetworkCore.cpp">
+      <Filter>NetCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pongServer\ClientInfo.cpp">
+      <Filter>NetCore</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\pongServer\ClientInfo.h" />
-    <ClInclude Include="..\pongServer\GameUserInfo.h" />
     <ClInclude Include="GameManager.h">
       <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="Game.h">
       <Filter>Game</Filter>
     </ClInclude>
-    <ClInclude Include="..\pongServer\IocpNetworkCore.h" />
-    <ClInclude Include="..\PongServer\Logger.h" />
-    <ClInclude Include="..\PongServer\AsyncRedis.hpp" />
+    <ClInclude Include="..\PongServer\Logger.h">
+      <Filter>Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PongServer\AsyncRedis.hpp">
+      <Filter>Redis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pongServer\IocpNetworkCore.h">
+      <Filter>NetCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pongServer\ClientInfo.h">
+      <Filter>NetCore</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

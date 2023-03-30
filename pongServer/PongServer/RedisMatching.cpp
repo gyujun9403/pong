@@ -4,9 +4,10 @@
 	#include <winsock2.h>
 #endif
 
-RedisMatching::RedisMatching(std::string ip, uint16_t port)
+RedisMatching::RedisMatching(std::string ip, uint16_t port, Logger* logger)
 : m_IP(ip), m_PORT(port)
 {
+	m_logger = logger;
 }
 
 RedisMatching::~RedisMatching()
@@ -89,7 +90,8 @@ bool RedisMatching::RedisInit()
 		}
 		return false;
 	}
-	std::cout << "Redis Server Init done" << std::endl;
+	//std::cout << "Redis Server Init done" << std::endl;
+	m_logger->log(LogLevel::INFO, "Redis Server Init done");
 	return true;
 }
 

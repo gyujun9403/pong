@@ -9,10 +9,12 @@
 #include <mutex>
 #include <thread>
 #include "GameUserInfo.h"
+#include "Logger.h"
 
 class RedisMatching
 {
 private:
+	Logger* m_logger;
 	std::string m_IP;
 	uint16_t m_PORT;
 	uint64_t m_keysCnt = 0;
@@ -29,7 +31,7 @@ private:
 	std::queue<std::string> m_gameResultQueue;
 	std::mutex m_gameResultQueueMutex;
 public:
-	RedisMatching(std::string ip, uint16_t port);
+	RedisMatching(std::string ip, uint16_t port, Logger* logger);
 	void runSendMatchingThread();
 	void runRecvMatchingThread();
 	bool RedisInit();

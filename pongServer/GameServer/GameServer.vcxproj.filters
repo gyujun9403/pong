@@ -22,6 +22,7 @@
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="..\pongServer\IocpNetworkCore.cpp" />
+    <ClCompile Include="..\PongServer\Logger.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\pongServer\ClientInfo.h" />
@@ -34,5 +35,6 @@
       <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="..\pongServer\IocpNetworkCore.h" />
+    <ClInclude Include="..\PongServer\Logger.h" />
   </ItemGroup>
 </Project>

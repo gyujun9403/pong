@@ -23,6 +23,9 @@
     <Filter Include="Redis">
       <UniqueIdentifier>{c8c991b7-eaf3-46c5-ac11-7fec0f2d6218}</UniqueIdentifier>
     </Filter>
+    <Filter Include="logger">
+      <UniqueIdentifier>{63c057a9-a774-45c0-a29f-827d83ff782f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IocpNetworkCore.cpp">
@@ -51,6 +54,9 @@
     </ClCompile>
     <ClCompile Include="RedisMatching.cpp">
       <Filter>Redis</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>logger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -86,6 +92,9 @@
     </ClInclude>
     <ClInclude Include="RedisMatching.hpp">
       <Filter>Redis</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>logger</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

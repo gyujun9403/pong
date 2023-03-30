@@ -1,9 +1,11 @@
 #include "IocpNetworkCore.h"
 #include "PacketsDefine.hpp"
 
-IocpNetworkCore::IocpNetworkCore(const uint32_t clientNum, const uint16_t workerThreadNum, const uint16_t port)
+
+IocpNetworkCore::IocpNetworkCore(const uint32_t clientNum, const uint16_t workerThreadNum, const uint16_t port, Logger* logger)
 : m_listenSocket(INVALID_SOCKET), m_workerThreadNum(workerThreadNum)
 	, m_clientNum(clientNum), m_isWorkersRun(true), m_isAccpterRun(true)
+	, m_logger(logger)
 {
 	m_serverAddr.sin_family = AF_INET;
 	m_serverAddr.sin_port = htons(port);
@@ -18,7 +20,8 @@ bool IocpNetworkCore::initServer()
 	}
 	catch (const std::string& errStr)
 	{
-		std::cerr << errStr << std::endl;
+		//std::cerr << errStr << std::endl;
+		m_logger->log(LogLevel::ERR, errStr);
 		return false;
 	}
 	return true;
@@ -35,7 +38,8 @@ bool IocpNetworkCore::upServer()
 	}
 	catch (const std::string& errStr)
 	{
-		std::cerr << errStr << std::endl;
+		//std::cerr << errStr << std::endl;
+		m_logger->log(LogLevel::ERR, errStr);
 		return false;
 	}
 	return true;
@@ -69,7 +73,8 @@ void IocpNetworkCore::init()
 	{
 		throw makeErrorStr("WSASocketW()");
 	}
-	std::cout << "init Success" << std::endl;
+	//std::cout << "init Success" << std::endl;
+	m_logger->log(LogLevel::INFO, "init Success");
 }
 
 void IocpNetworkCore::bind()
@@ -78,7 +83,8 @@ void IocpNetworkCore::bind()
 	{
 		throw makeErrorStr("::bind(...)");
 	}
-	std::cout << "bind Success" << std::endl;
+	//std::cout << "bind Success" << std::endl;
+	m_logger->log(LogLevel::INFO, "bind Success");
 }
 
 void IocpNetworkCore::listen()
@@ -87,7 +93,8 @@ void IocpNetworkCore::listen()
 	{
 		throw makeErrorStr("::listen(...)");
 	}
-	std::cout << "listen Success" << std::endl;
+	//std::cout << "listen Success" << std::endl;
+	m_logger->log(LogLevel::INFO, "listen Success");
 }
 
 void IocpNetworkCore::iocpInit()
@@ -102,12 +109,14 @@ void IocpNetworkCore::iocpInit()
 	{
 		throw makeErrorStr("CreateIoCompletionPort(...) init");
 	}
-	std::cout << "IOCP init Success" << std::endl;
+	//std::cout << "IOCP init Success" << std::endl;
+	m_logger->log(LogLevel::INFO, "IOCP init Success");
 }
 
 
 void IocpNetworkCore::iocpRun()
 {
+	// IOCP 워커 스레드 및 Accept 스레드, Kick 스레드 생성
 	for (size_t i = 0; i < m_workerThreadNum; i++)
 	{
 		m_workers.emplace_back
@@ -132,7 +141,8 @@ void IocpNetworkCore::iocpRun()
 			kickThreadTunc();
 		}
 	);
-	std::cout << "IOCP running..." << std::endl;
+	//std::cout << "IOCP running..." << std::endl;
+	m_logger->log(LogLevel::INFO, "IOCP running...");
 }
 
 void IocpNetworkCore::joinThreads()
@@ -144,19 +154,22 @@ void IocpNetworkCore::joinThreads()
 	{
 		m_workers[i].join();
 	}
-	std::cout << "threads join done" << std::endl;
+	//std::cout << "threads join done" << std::endl;
+	m_logger->log(LogLevel::INFO, "threads join done");
 }
 
 void IocpNetworkCore::closeHandle()
 {
 	CloseHandle(m_iocpHandle);
-	std::cout << "IOCP handle closed" << std::endl;
+	//std::cout << "IOCP handle closed" << std::endl;
+	m_logger->log(LogLevel::INFO, "IOCP handle closed");
 }
 
 void IocpNetworkCore::closeSocket()
 {
 	closesocket(m_listenSocket);
-	std::cout << "Listen soecket closed" << std::endl;
+	//std::cout << "Listen soecket closed" << std::endl;
+	m_logger->log(LogLevel::INFO, "Listen soecket closed");
 }
 
 void IocpNetworkCore::recv(ClientInfo& clientInfo)
@@ -184,7 +197,8 @@ void IocpNetworkCore::recv(ClientInfo& clientInfo)
 	{
 		if (WSAGetLastError() != ERROR_IO_PENDING)
 		{
-			std::cerr << makeErrorStr("WSARecv()") << std::endl;
+			//std::cerr << makeErrorStr("WSARecv()") << std::endl;
+			m_logger->log(LogLevel::ERR, makeErrorStr("WSARecv()"));
 		}
 	}
 }
@@ -267,7 +281,8 @@ void IocpNetworkCore::send(ClientInfo& clientInfo)
 	{
 		if (WSAGetLastError() != ERROR_IO_PENDING)
 		{
-			std::cerr << makeErrorStr("WSASend()") << std::endl;
+			//std::cerr << makeErrorStr("WSASend()") << std::endl;
+			m_logger->log(LogLevel::ERR, makeErrorStr("WSASend()"));
 		}
 	}
 }
@@ -290,7 +305,8 @@ void IocpNetworkCore::acceptThreadFunc()
 		}
 		if (emptyClientInfo == NULL)
 		{
-			std::cout << makeErrorStr("emptyClientInfo") << std::endl;
+			//std::cerr << makeErrorStr("emptyClientInfo") << std::endl;
+			m_logger->log(LogLevel::ERR, makeErrorStr("emptyClientInfo"));
 			return;
 		}
 
@@ -298,7 +314,8 @@ void IocpNetworkCore::acceptThreadFunc()
 		if (emptyClientInfo->clientSocket == INVALID_SOCKET
 			|| emptyClientInfo->clientSocket == NULL)
 		{
-			std::cout << makeErrorStr("accept") << std::endl;
+			//std::cerr << makeErrorStr("accept") << std::endl;
+			m_logger->log(LogLevel::ERR, makeErrorStr("accept"));
 			return;
 		}
 
@@ -311,13 +328,16 @@ void IocpNetworkCore::acceptThreadFunc()
 		);
 		if (rtHandle != m_iocpHandle)
 		{
-			std::cout << makeErrorStr("CreateIoCompletionPort?") << std::endl;
+			//std::cerr << makeErrorStr("CreateIoCompletionPort?") << std::endl;
+			m_logger->log(LogLevel::ERR, makeErrorStr("CreateIoCompletionPort"));
 			return;
 		}
-		std::cout << emptyClientInfo->index << " accepted" << std::endl;
+		//std::cout << emptyClientInfo->index << " accepted" << std::endl;
+		m_logger->log(LogLevel::INFO, std::move(std::to_string(emptyClientInfo->index) + " accepted"));
 		recv(*emptyClientInfo);
 	}
-	std::cout << "accept stop" << std::endl;
+	//std::cout << "accept stop" << std::endl;
+	m_logger->log(LogLevel::INFO, "accept stop");
 }
 
 void IocpNetworkCore::kickThreadTunc()
@@ -356,7 +376,8 @@ void IocpNetworkCore::closeClient(ClientInfo& clientInfo, bool forceClose)
 		sizeof(ligerOpt)
 	);
 	closesocket(clientInfo.clientSocket);
-	std::cout << clientInfo.index << " clinet out" << std::endl;
+	//std::cout << clientInfo.index << " clinet out" << std::endl;
+	m_logger->log(LogLevel::INFO, std::move(std::to_string(clientInfo.index) + " clinet out"));
 	clientInfo.clearClientInfo();
 	std::lock_guard<std::mutex> closeUserLock(m_closedUserIndexQueueMutex);
 	m_closedUserIndexQueue.push(clientInfo.index);
@@ -453,7 +474,8 @@ void IocpNetworkCore::workerThreadFunc()
 			throw "?????";
 		}
 	}
-	std::cout << "woker stop" << std::endl;
+	//std::cout << "woker stop" << std::endl;
+	m_logger->log(LogLevel::INFO, "woker stop");
 }
 
 

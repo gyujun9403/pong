@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <chrono>
 #include "ErrorCode.hpp"
+#include "Logger.h"
 
 #define GAME_CANCEL_TIME 1'000'000'000 // 1sec
 

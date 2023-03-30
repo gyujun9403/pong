@@ -137,6 +137,7 @@
     <ClCompile Include="..\pongServer\ClientInfo.cpp" />
     <ClCompile Include="..\pongServer\GameUserInfo.cpp" />
     <ClCompile Include="..\pongServer\IocpNetworkCore.cpp" />
+    <ClCompile Include="..\PongServer\Logger.cpp" />
     <ClCompile Include="..\pongServer\RedisMatching.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameManager.cpp" />
@@ -151,6 +152,7 @@
     <ClInclude Include="..\pongServer\ClientInfo.h" />
     <ClInclude Include="..\pongServer\GameUserInfo.h" />
     <ClInclude Include="..\pongServer\IocpNetworkCore.h" />
+    <ClInclude Include="..\PongServer\Logger.h" />
     <ClInclude Include="..\pongServer\RedisMatching.hpp" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameManager.h" />

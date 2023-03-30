@@ -9,7 +9,7 @@
 #include "RoomManager.h"
 #include "IocpNetworkCore.h"
 #include "PacketsDefine.hpp"
-#include "RedisMatching.hpp"
+#include "AsyncRedis.hpp"
 
 #define PORT 3334
 #define WORKER_THREAD_NUM 4
@@ -23,7 +23,7 @@ private:
 	IocpNetworkCore* m_network;
 	UserManager* m_userManager;
 	RoomManager* m_roomManager;
-	RedisMatching* m_matchingManager;
+	AsyncRedis* m_matchingManager;
 	std::map<PACKET_ID, FuncType> m_packetProcessMap;
 	std::atomic<bool> m_isServiceRun;
 	
@@ -40,7 +40,7 @@ private:
 	int packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> ReqPacket);
 
 public:
-	Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, RedisMatching* matchingManager);
+	Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, AsyncRedis* matchingManager);
 	void serviceInit();
 	void runService();
 	void joinService();

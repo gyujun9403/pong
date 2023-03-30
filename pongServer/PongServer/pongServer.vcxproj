@@ -135,10 +135,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GameUserInfo.cpp" />
     <ClCompile Include="IocpNetworkCore.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="RedisMatching.cpp" />
+    <ClCompile Include="AsyncRedis.cpp" />
     <ClCompile Include="Room.cpp" />
     <ClCompile Include="RoomManager.cpp" />
     <ClCompile Include="Service.cpp" />
@@ -148,10 +148,10 @@
   <ItemGroup>
     <ClInclude Include="ClientInfo.h" />
     <ClInclude Include="ErrorCode.hpp" />
-    <ClInclude Include="GameUserInfo.h" />
     <ClInclude Include="IocpNetworkCore.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="PacketsDefine.hpp" />
-    <ClInclude Include="RedisMatching.hpp" />
+    <ClInclude Include="AsyncRedis.hpp" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="RoomManager.h" />
     <ClInclude Include="Service.hpp" />

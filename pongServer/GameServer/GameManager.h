@@ -7,7 +7,7 @@
 #include <sstream>
 #include "Game.h"
 #include "PacketsDefine.hpp"
-#include "RedisMatching.hpp"
+#include "AsyncRedis.hpp"
 #include "IocpNetworkCore.h"
 
 #pragma pack(push, 1)
@@ -23,7 +23,7 @@ private:
 	const int32_t m_gameNum;
 	int32_t m_runningGameNum = 0;
 	IocpNetworkCore* m_network;
-	RedisMatching* m_redis;
+	AsyncRedis* m_redis;
 	typedef std::function<int(int, std::vector<char>)> FuncType;
 	std::map<PACKET_ID, FuncType> m_packetProcessMap;
 	
@@ -40,7 +40,7 @@ private:
 	Game* getEmptyGame();
 	bool setUserInGame(std::vector<int32_t> userList, Game* emptyGame);
 public:
-	GameManagerService(IocpNetworkCore* network, RedisMatching* redis, int32_t gameNum);
+	GameManagerService(IocpNetworkCore* network, AsyncRedis* redis, int32_t gameNum);
 	void pushPacketToSendQueue(int clinetIndex, char* packet, size_t length);
 	void initGameManagerService();
 	void gameServiceThread();

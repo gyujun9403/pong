@@ -1,26 +1,27 @@
-#include "RedisMatching.hpp"
+#include "AsyncRedis.hpp"
 #include <format>
 #ifdef _MSC_VER
 	#include <winsock2.h>
 #endif
 
-RedisMatching::RedisMatching(std::string ip, uint16_t port)
+AsyncRedis::AsyncRedis(std::string ip, uint16_t port, Logger* logger)
 : m_IP(ip), m_PORT(port)
 {
+	m_logger = logger;
 }
 
-RedisMatching::~RedisMatching()
+AsyncRedis::~AsyncRedis()
 {
 	redisFree(m_c);
 }
 
-void RedisMatching::pushToMatchQueue(std::string str)
+void AsyncRedis::pushToMatchQueue(std::string str)
 {
 	std::unique_lock<std::mutex> matchQueueLock(m_matchingQueueMutex);
 	m_matchingQueue.push(std::move(str));
 }
 
-std::vector<std::string> RedisMatching::getFromMatchQueue()
+std::vector<std::string> AsyncRedis::getFromMatchQueue()
 {
 	std::unique_lock<std::mutex> matchQueueLock(m_matchingQueueMutex);
 	size_t size = m_matchingQueue.size();
@@ -33,19 +34,19 @@ std::vector<std::string> RedisMatching::getFromMatchQueue()
 	return rt;
 }
 
-void RedisMatching::pushToMatchResultQueue(std::string str)
+void AsyncRedis::pushToMatchResultQueue(std::string str)
 {
 	std::unique_lock<std::mutex> matchResultQueueLock(m_matchResultQueueMutex);
 	m_matchResultQueue.push(std::move(str));
 }
 
-void RedisMatching::pushToGameResultQueue(std::string str)
+void AsyncRedis::pushToGameResultQueue(std::string str)
 {
 	std::unique_lock<std::mutex> matchQueueLock(m_gameResultQueueMutex);
 	m_gameResultQueue.push(std::move(str));
 }
 
-std::vector<std::string> RedisMatching::getFormMatchResultQueue()
+std::vector<std::string> AsyncRedis::getFormMatchResultQueue()
 {
 	std::unique_lock<std::mutex> matchResultQueueLock(m_matchResultQueueMutex);
 	size_t size = m_matchResultQueue.size();
@@ -58,7 +59,7 @@ std::vector<std::string> RedisMatching::getFormMatchResultQueue()
 	return rt;
 }
 
-std::vector<std::string> RedisMatching::getFormGameResultQueue()
+std::vector<std::string> AsyncRedis::getFormGameResultQueue()
 {
 	std::unique_lock<std::mutex> gameResultQueueLock(m_gameResultQueueMutex);
 	size_t size = m_gameResultQueue.size();
@@ -72,9 +73,9 @@ std::vector<std::string> RedisMatching::getFormGameResultQueue()
 }
 
 
-bool RedisMatching::RedisInit()
+bool AsyncRedis::RedisInit()
 {
-	struct timeval timeout = { 1, 500000 }; // 1.5 seconds
+	struct timeval timeout = { 1, 500000 };
 	m_c = redisConnectWithTimeout(m_IP.c_str(), m_PORT, timeout);
 	if (m_c == NULL || m_c->err)
 	{
@@ -89,13 +90,13 @@ bool RedisMatching::RedisInit()
 		}
 		return false;
 	}
-	std::cout << "Redis Server Init done" << std::endl;
+	m_logger->log(LogLevel::INFO, "Redis Server Init done");
 	return true;
 }
 
-void RedisMatching::runSendMatchingThread()
+void AsyncRedis::runSendMatchingThread()
 {
-	m_redisMatchingThread = std::thread
+	m_redisThread = std::thread
 	(
 		[this]()
 		{
@@ -175,9 +176,9 @@ void RedisMatching::runSendMatchingThread()
 	);
 }
 
-void RedisMatching::runRecvMatchingThread()
+void AsyncRedis::runRecvMatchingThread()
 {
-	m_redisMatchingThread = std::thread
+	m_redisThread = std::thread
 	(
 		[this]()
 		{

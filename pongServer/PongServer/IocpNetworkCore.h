@@ -11,6 +11,7 @@
 #include <mutex>
 #include "IServer.h"
 #include "ClientInfo.h"
+#include "Logger.h"
 
 class IocpNetworkCore
 {
@@ -21,6 +22,7 @@ private:
 	const uint16_t m_workerThreadNum;
 	const uint32_t m_clientNum;
 	std::vector<ClientInfo, std::allocator<ClientInfo> > m_clients;
+	Logger* m_logger;
 
 	std::atomic_bool m_isWorkersRun;
 	std::atomic_bool m_isAccpterRun;
@@ -55,8 +57,7 @@ private:
 	std::string makeErrorStr(const std::string errFunc);
 public:
 	IocpNetworkCore() = delete;
-	// 서버 유저수, 워커스레드 개수
-	IocpNetworkCore(uint32_t clientNum, uint16_t workerThreadNum, uint16_t port);
+	IocpNetworkCore(uint32_t clientNum, uint16_t workerThreadNum, uint16_t port, Logger* logger);
 	~IocpNetworkCore() {}
 	void pushToSendQueue(uint16_t clientIndex, std::vector<char> packet);
 	std::pair<int, std::vector<char> > getFromRecvQueue();

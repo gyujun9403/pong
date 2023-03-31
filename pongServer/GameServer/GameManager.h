@@ -9,8 +9,8 @@
 #include "PacketsDefine.hpp"
 #include "AsyncRedis.hpp"
 #include "IocpNetworkCore.h"
+#include "Logger.h"
 
-#pragma pack(push, 1)
 struct UserInfo
 {
 	int32_t ClinetIndex;
@@ -20,6 +20,7 @@ struct UserInfo
 class GameManagerService
 {
 private:
+	Logger* m_logger;
 	const int32_t m_gameNum;
 	int32_t m_runningGameNum = 0;
 	IocpNetworkCore* m_network;
@@ -40,13 +41,12 @@ private:
 	Game* getEmptyGame();
 	bool setUserInGame(std::vector<int32_t> userList, Game* emptyGame);
 public:
-	GameManagerService(IocpNetworkCore* network, AsyncRedis* redis, int32_t gameNum);
+	GameManagerService(IocpNetworkCore* network, AsyncRedis* redis, int32_t gameNum, Logger* logger);
 	void pushPacketToSendQueue(int clinetIndex, char* packet, size_t length);
 	void initGameManagerService();
 	void gameServiceThread();
 	void runGameManagerService();
 	void joinGameManagerService();
-	void makeUsersLose(std::vector<int32_t> losers);
 	int packetProcessGameEnterRequest(int clinetIndex, std::vector<char> ReqPacket);
 	int packetProcessGameControlRequest(int clinetIndex, std::vector<char> ReqPacket);
 };

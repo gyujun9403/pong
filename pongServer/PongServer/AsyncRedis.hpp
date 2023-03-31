@@ -18,6 +18,7 @@ private:
 	uint16_t m_PORT;
 	uint64_t m_keysCnt = 0;
 	redisContext* m_c;
+	std::atomic<bool> m_isRedisRun;
 
 	std::thread m_redisThread;
 
@@ -31,15 +32,16 @@ private:
 	std::mutex m_gameResultQueueMutex;
 public:
 	AsyncRedis(std::string ip, uint16_t port, Logger* logger);
-	void runSendMatchingThread();
-	void runRecvMatchingThread();
 	bool RedisInit();
+	void RedisJoin();
 	~AsyncRedis();
-	// 본체 서버에서 사용.
+	// 매칭/채팅 서버에서 사용.
+	void runRedisThread4MC();
 	void pushToMatchQueue(std::string str);
 	std::vector<std::string> getFormMatchResultQueue();
 	std::vector<std::string> getFormGameResultQueue();
 	// 게임 서버에서 사용.
+	void runRedisThread4Game();
 	std::vector<std::string> getFromMatchQueue();
 	void pushToMatchResultQueue(std::string str);
 	void pushToGameResultQueue(std::string str);

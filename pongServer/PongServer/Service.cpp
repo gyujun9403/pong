@@ -2,15 +2,19 @@
 #include "PacketsDefine.hpp"
 #include "ErrorCode.hpp"
 
-Service::Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, AsyncRedis* matchingManager)
-:m_network(network), m_userManager(userManager), m_isServiceRun(true), m_roomManager(roomManager), m_matchingManager(matchingManager)
+Service::Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, AsyncRedis* matchingManager, Logger* logger)
+	:m_network(network), m_userManager(userManager), m_isServiceRun(true), m_roomManager(roomManager), m_matchingManager(matchingManager), m_logger(logger)
 {
 }
 
 int Service::divergePackets(std::pair<int, std::vector<char> > packetSet)
 {
 	PACKET_ID* packetId = reinterpret_cast<PACKET_ID*>(&packetSet.second[0] + sizeof(PacketHeader::PacketLength));
-
+	if (m_packetProcessMap.find(*packetId) == m_packetProcessMap.end())
+	{
+		m_logger->log(LogLevel::WARNING, "invalid packet form client.");
+		return -1;
+	}
 	return m_packetProcessMap[*packetId](packetSet.first, packetSet.second);
 }
 

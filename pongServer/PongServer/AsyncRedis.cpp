@@ -5,7 +5,7 @@
 #endif
 
 AsyncRedis::AsyncRedis(std::string ip, uint16_t port, Logger* logger)
-: m_IP(ip), m_PORT(port)
+: m_IP(ip), m_PORT(port), m_isRedisRun(true)
 {
 	m_logger = logger;
 }
@@ -81,12 +81,12 @@ bool AsyncRedis::RedisInit()
 	{
 		if (m_c)
 		{
-			std::cerr << "\033[31mConnection error: " << m_c->errstr << "\033[0m" << std::endl;
+			m_logger->log(LogLevel::ERR, std::string("Connection error: %s") + m_c->errstr);
 			redisFree(m_c);
 		}
 		else
 		{
-			std::cerr << "\033[31mConnection error: can't allocate redis context\033[0m\n" << std::endl;
+			m_logger->log(LogLevel::ERR, "Connection error: can't allocate redis context");
 		}
 		return false;
 	}
@@ -94,13 +94,20 @@ bool AsyncRedis::RedisInit()
 	return true;
 }
 
-void AsyncRedis::runSendMatchingThread()
+void AsyncRedis::RedisJoin()
+{
+	m_isRedisRun.store(false);
+	m_redisThread.join();
+	redisFree(m_c);
+}
+
+void AsyncRedis::runRedisThread4MC()
 {
 	m_redisThread = std::thread
 	(
 		[this]()
 		{
-			while (1)
+			while (m_isRedisRun.load())
 			{
 				std::vector<std::string> members = getFromMatchQueue();
 				// matchingqueue =(push)=> Redis
@@ -176,14 +183,14 @@ void AsyncRedis::runSendMatchingThread()
 	);
 }
 
-void AsyncRedis::runRecvMatchingThread()
+void AsyncRedis::runRedisThread4Game()
 {
 	m_redisThread = std::thread
 	(
 		[this]()
 		{
 			// matchingQueue <=(pop)= Redis
-			while (1)
+			while (m_isRedisRun.load())
 			{
 				while (1)
 				{

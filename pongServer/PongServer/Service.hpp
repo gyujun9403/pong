@@ -10,6 +10,7 @@
 #include "IocpNetworkCore.h"
 #include "PacketsDefine.hpp"
 #include "AsyncRedis.hpp"
+#include "Logger.h"
 
 #define PORT 3334
 #define WORKER_THREAD_NUM 4
@@ -18,6 +19,7 @@
 class Service
 {
 private:
+	Logger* m_logger;
 	typedef std::function<int(int, std::vector<char>)> FuncType;
 	std::thread m_serviceThread;
 	IocpNetworkCore* m_network;
@@ -40,7 +42,7 @@ private:
 	int packetProcessRoomReadyRequest(int clinetIndex, std::vector<char> ReqPacket);
 
 public:
-	Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, AsyncRedis* matchingManager);
+	Service(IocpNetworkCore* network, UserManager* userManager, RoomManager* roomManager, AsyncRedis* matchingManager, Logger* logger);
 	void serviceInit();
 	void runService();
 	void joinService();

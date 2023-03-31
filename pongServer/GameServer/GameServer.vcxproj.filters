@@ -16,9 +16,6 @@
     <Filter Include="NetCore">
       <UniqueIdentifier>{042aed42-464b-4bfc-926c-b2a07472ad79}</UniqueIdentifier>
     </Filter>
-    <Filter Include="NewFilter1">
-      <UniqueIdentifier>{c6ad1276-f330-4824-b039-15f8c4a524e3}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

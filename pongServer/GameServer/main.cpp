@@ -19,11 +19,11 @@ int main()
 	AsyncRedis asyncRedis(REDIS_IP, REDIS_PORT, &logger);
 	GameManagerService gameManagerService(&network, &asyncRedis, GAME_NUM, &logger);
 
-	if (network.initServer() || network.upServer())
+	if (!network.initServer() || !network.upServer())
 	{
 		return 0;
 	}
-	if (asyncRedis.RedisInit())
+	if (!asyncRedis.RedisInit())
 	{
 		return 0;
 	}
